@@ -27,7 +27,6 @@
         .header h1 { font-size: 2.2rem; margin-bottom: 3px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
         .header p { font-size: 1rem; opacity: 0.9; }
 
-        /* 初始登录界面的教师端入口按钮 */
         .initial-teacher-btn {
             background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 8px 16px;
             font-size: 0.9rem; font-weight: bold; border-radius: 30px; cursor: pointer;
@@ -68,18 +67,17 @@
             box-shadow: 0 8px 25px rgba(0,0,0,0.08); border: 4px solid #333; transform-origin: top left;
         }
 
-        /* 18宫格棋盘布局优化 */
+        /* 18宫格棋盘样式 */
         .cell {
-            position: absolute; width: 92px; height: 86px; background: #ffffff;
+            position: absolute; width: 85px; height: 85px; background: #ffffff;
             border: 2px solid #333; border-radius: 8px;
             display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            font-weight: bold; font-size: 0.7rem; text-align: center; padding: 2px;
+            font-weight: bold; font-size: 0.65rem; text-align: center; padding: 2px;
             box-shadow: 0 2px 6px rgba(0,0,0,0.05); transition: transform 0.2s;
         }
         .cell:hover { transform: scale(1.03); z-index: 10; }
         .cell-num { position: absolute; top: 3px; left: 5px; font-size: 0.6rem; color: #666; font-weight: bold; }
         
-        /* 低饱和度功能色彩 */
         .cell.go { background: #ffebee; border-color: #e57373; color: #c62828; }
         .cell.stop { background: #fff3e0; border-color: #ffb74d; color: #e65100; }
         .cell.reward { background: #e8f5e9; border-color: #81c784; color: #2e7d32; }
@@ -256,12 +254,12 @@
     </div>
 </div>
 
-<!-- 教师端录入管理弹窗（带 1020# 密码保护） -->
+<!-- 教师端录入管理弹窗（带 1020# 密码保护，增设音频上传） -->
 <div class="modal-overlay" id="teacherModal">
     <div class="modal-card">
         <span class="modal-close" onclick="closeTeacherModal()">&times;</span>
         <div class="modal-title"><i class="fas fa-upload"></i> 教师端题库录入系统 <span style="font-size:0.8rem; color:#666;">(Teacher Console)</span></div>
-        <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 12px;">为任意棋盘格子绑定定制练习（支持选择题或无选项图片上传实操题）。</p>
+        <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 12px;">为任意棋盘格子绑定定制练习（支持选择题或无选项图片/听力音频上传实操题）。</p>
         
         <form id="teacherForm" onsubmit="saveTeacherQuestion(event)">
             <div class="form-group">
@@ -272,17 +270,26 @@
                 <label>题目类型 (Question Type):</label>
                 <select id="tQuestionType" onchange="toggleQuestionTypeFields()">
                     <option value="choice">选择题 (Multiple Choice)</option>
-                    <option value="image_upload">图片实操题 (Image Upload Task)</option>
+                    <option value="image_upload">图片/听力实操题 (Image & Audio Task)</option>
                 </select>
             </div>
             <div class="form-group">
                 <label>题目内容 / 要求说明 (Question Content):</label>
-                <textarea id="tQuestionText" rows="2" placeholder="例如：请在纸上写出本课生词并拍照上传"></textarea>
+                <textarea id="tQuestionText" rows="2" placeholder="例如：请听音频完成听力练习，并在纸上写出答案后拍照上传"></textarea>
             </div>
+            
+            <!-- 上传图片附件 -->
             <div class="form-group">
-                <label>参考样图或附件 (Optional Media):</label>
+                <label>上传图片附件 (Optional Image):</label>
                 <input type="file" id="tMediaFile" accept="image/*,.pdf" onchange="handleFileupload(event)">
-                <div class="file-preview" id="filePreviewText" style="font-size:0.8rem; color:#666;">未选择任何文件 / No file chosen</div>
+                <div class="file-preview" id="filePreviewText" style="font-size:0.8rem; color:#666;">未选择任何图片 / No image chosen</div>
+            </div>
+
+            <!-- 新增：上传听力音频文件功能 -->
+            <div class="form-group">
+                <label>🎵 上传听力音频文件 (Optional Audio / Listening file):</label>
+                <input type="file" id="tAudioFile" accept="audio/*" onchange="handleAudioUpload(event)">
+                <div class="file-preview" id="audioPreviewText" style="font-size:0.8rem; color:#666;">未选择任何音频 / No audio chosen</div>
             </div>
 
             <div id="choiceFieldsContainer">
@@ -300,12 +307,15 @@
     </div>
 </div>
 
-<!-- 学生答题弹窗（图片上传题模式） -->
+<!-- 学生答题弹窗（图片及听力音频任务模式） -->
 <div class="quiz-modal" id="studentQuizModal">
     <div class="quiz-card">
-        <h2 style="color: #ff4b2b; margin-bottom: 10px;">📸 闯关实操任务<br><span style="font-size:0.8rem; color:#666;">Practical Task Challenge</span></h2>
+        <h2 style="color: #ff4b2b; margin-bottom: 10px;">📸 闯关实操/听力任务<br><span style="font-size:0.8rem; color:#666;">Practical & Listening Task Challenge</span></h2>
         <p id="quizQuestionText" style="font-size: 1.1rem; margin-bottom: 15px; font-weight: bold;"></p>
+        
+        <!-- 动态显示图片或音频播放器 -->
         <div id="quizMediaContainer" style="margin-bottom: 15px;"></div>
+        <div id="quizAudioContainer" style="margin-bottom: 15px;"></div>
         
         <div style="background: #fff3cd; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 0.95rem; color: #856404;">
             ⏱️ 剩余反应时间 (Time Remaining): <span id="timerCountdown" style="font-weight: bold; font-size: 1.2rem;">300</span> 秒 (sec)
@@ -340,6 +350,7 @@
     let myPlayer = null;
     let customCellQuestions = {};
     let uploadedMediaData = null;
+    let uploadedAudioData = null; // 新增：音频数据存储
     let quizTimer = null;
 
     const PIPS = { 1: [5], 2: [1, 9], 3: [1, 5, 9], 4: [1, 3, 7, 9], 5: [1, 3, 5, 7, 9], 6: [1, 3, 4, 6, 7, 9] };
@@ -376,31 +387,26 @@
         generateBoardCells();
     }
 
-    // 生成 18 个格子：顶部5格、底部5格、左右各4格（总计18个），包含7个功能格与11个题目录入格
+    // 生成 18 宫格棋盘
     function generateBoardCells() {
         const mapContainer = document.getElementById('mapContainer');
         mapContainer.querySelectorAll('.cell').forEach(c => c.remove());
         
         let coords = [];
-        // 顶部横排 5 格 (0 到 4)
-        for(let i = 0; i <= 4; i++) {
-            coords.push({ index: i, left: i * 150 + 40, top: 20 });
+        for(let i = 0; i <= 5; i++) {
+            coords.push({ index: i, left: i * 132 + 20, top: 18 });
         }
-        // 右侧竖排 4 格 (5 到 8)
         for(let i = 1; i <= 4; i++) {
-            coords.push({ index: 4 + i, left: 740, top: i * 115 + 20 });
+            coords.push({ index: 5 + i, left: 735, top: i * 115 + 18 });
         }
-        // 底部横排 5 格 (9 到 13，从右向左)
         for(let i = 0; i <= 4; i++) {
-            coords.push({ index: 9 + i, left: 740 - i * 150, top: 505 });
+            coords.push({ index: 10 + i, left: 735 - i * 132, top: 515 });
         }
-        // 左侧竖排 4 格 (14 到 17，从下到上)
-        for(let i = 1; i <= 4; i++) {
-            coords.push({ index: 13 + i, left: 40, top: 505 - i * 115 });
+        for(let i = 1; i <= 3; i++) {
+            coords.push({ index: 14 + i, left: 20, top: 515 - i * 115 });
         }
 
-        // 7个功能性格子精确配置 (0:GO, 2:REWARD, 4:STOP, 7:PUNISH, 10:REWARD, 13:CHANCE, 16:PUNISH)
-        // 其余 11 个格子为普通题目录入格 (normal)
+        // 7个功能性格子精确定位配置
         let specialTypes = {
             0: 'go',        /* cell 0: GO ➡️ 起点 */
             2: 'reward',    /* 奖励积分 Random Reward */
@@ -415,7 +421,7 @@
         coords.forEach(c => uniqueCoords[c.index] = c);
         
         for(let i = 0; i < 18; i++) {
-            let c = uniqueCoords[i] || { index: i, left: 40, top: 20 };
+            let c = uniqueCoords[i] || { index: i, left: 20, top: 18 };
             let cellType = specialTypes[i] || 'normal';
 
             let cellDiv = document.createElement('div');
@@ -450,7 +456,6 @@
             mapContainer.appendChild(cellDiv);
         }
 
-        // 初始化教师端格子下拉选项（0~17号）
         let select = document.getElementById('tCellIndex');
         if (select) {
             select.innerHTML = '';
@@ -510,6 +515,17 @@
         }
     }
 
+    // 新增：处理音频文件上传
+    function handleAudioUpload(event) {
+        let file = event.target.files[0];
+        if(file) {
+            document.getElementById('audioPreviewText').textContent = `已选择音频: ${file.name}`;
+            let reader = new FileReader();
+            reader.onload = function(e) { uploadedAudioData = { url: e.target.result, type: file.type }; };
+            reader.readAsDataURL(file);
+        }
+    }
+
     function saveTeacherQuestion(e) {
         e.preventDefault();
         let cellIdx = document.getElementById('tCellIndex').value;
@@ -519,6 +535,7 @@
             type: qType,
             question: document.getElementById('tQuestionText').value,
             mediaUrl: uploadedMediaData ? uploadedMediaData.url : null,
+            audioUrl: uploadedAudioData ? uploadedAudioData.url : null, // 保存音频数据
             optA: qType === 'choice' ? document.getElementById('tOptA').value : null,
             optB: qType === 'choice' ? document.getElementById('tOptB').value : null,
             optC: qType === 'choice' ? document.getElementById('tOptC').value : null,
@@ -526,8 +543,10 @@
         };
         alert(`成功为第 ${cellIdx} 号格子绑定定制题目！\nSuccessfully bound customized task to cell ${cellIdx}!`);
         uploadedMediaData = null;
+        uploadedAudioData = null;
         document.getElementById('teacherForm').reset();
         document.getElementById('filePreviewText').textContent = '未选择任何文件 / No file chosen';
+        document.getElementById('audioPreviewText').textContent = '未选择任何音频 / No audio chosen';
         closeTeacherModal();
     }
 
@@ -612,12 +631,24 @@
         }, 2200);
     });
 
-    socket.on('trigger_image_quiz', (data) => {
+    // 触发题目/图片/听力音频任务
+    socket.on('trigger_quiz_task', (data) => {
         let qData = customCellQuestions[data.position];
         if (myPlayer && myPlayer.id === data.playerId) {
             document.getElementById('quizQuestionText').textContent = qData ? qData.question : `请完成第 ${data.position} 号格子的实操任务并拍照上传！(Complete task & upload photo)`;
+            
+            // 显示图片
             let mediaBox = document.getElementById('quizMediaContainer');
-            mediaBox.innerHTML = qData && qData.mediaUrl ? `<img src="${qData.mediaUrl}" style="max-width:100%; max-height:180px; border-radius:6px;">` : '';
+            mediaBox.innerHTML = qData && qData.mediaUrl ? `<img src="${qData.mediaUrl}" style="max-width:100%; max-height:160px; border-radius:6px;">` : '';
+            
+            // 显示音频播放器（如果配置了听力音频）
+            let audioBox = document.getElementById('quizAudioContainer');
+            audioBox.innerHTML = qData && qData.audioUrl ? `
+                <div style="background:#f1f5f9; padding:10px; border-radius:8px; border:1px solid #cbd5e1;">
+                    <p style="margin:0 0 5px 0; font-size:0.9rem; font-weight:bold; color:#1e293b;">🎧 听力音频 (Listening Audio):</p>
+                    <audio controls src="${qData.audioUrl}" style="width:100%;"></audio>
+                </div>
+            ` : '';
             
             document.getElementById('studentQuizModal').style.display = 'flex';
             
