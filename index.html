@@ -84,6 +84,9 @@
         .cell.punish { background: #fce4ec; border-color: #f48fb1; color: #c2185b; }
         .cell.chance { background: #ede7f6; border-color: #b39ddb; color: #512da8; }
         .cell.normal { background: #f8fafc; border-color: #cbd5e1; color: #334155; }
+        
+        /* 已绑定题目的普通格子动态高亮边框与小标记 */
+        .cell.bound { border: 2px dashed #2563eb; background: #eff6ff; }
 
         .board-center-banner {
             position: absolute; top: 160px; left: 140px; width: 560px; height: 300px;
@@ -254,12 +257,12 @@
     </div>
 </div>
 
-<!-- 教师端录入管理弹窗（带 1020# 密码保护，下拉菜单已排除功能格） -->
+<!-- 教师端录入管理弹窗（带 1020# 密码保护，下拉菜单备注已绑定状态） -->
 <div class="modal-overlay" id="teacherModal">
     <div class="modal-card">
         <span class="modal-close" onclick="closeTeacherModal()">&times;</span>
         <div class="modal-title"><i class="fas fa-upload"></i> 教师端题库录入系统 <span style="font-size:0.8rem; color:#666;">(Teacher Console)</span></div>
-        <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 12px;">为棋盘中的 11 个题目录入格绑定定制练习（已自动排除功能格）。</p>
+        <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 12px;">为棋盘中的 11 个题目录入格绑定定制练习（已自动排除功能格，下拉菜单中将显示已绑定备注）。</p>
         
         <form id="teacherForm" onsubmit="saveTeacherQuestion(event)">
             <div class="form-group">
@@ -345,7 +348,7 @@
     const socket = io(SOCKET_SERVER_URL);
 
     let myPlayer = null;
-    let customCellQuestions = {};
+    let customCellQuestions = {}; // 存储格子绑定的题目
     let uploadedMediaData = null;
     let uploadedAudioData = null;
     let quizTimer = null;
@@ -384,7 +387,7 @@
         generateBoardCells();
     }
 
-    // 生成 18 宫格棋盘
+    // 生成 18 宫格棋盘（已绑定题目的格子会带有 bound 样式和“已绑定”提示）
     function generateBoardCells() {
         const mapContainer = document.getElementById('mapContainer');
         mapContainer.querySelectorAll('.cell').forEach(c => c.remove());
@@ -420,9 +423,13 @@
         for(let i = 0; i < 18; i++) {
             let c = uniqueCoords[i] || { index: i, left: 20, top: 18 };
             let cellType = specialTypes[i] || 'normal';
+            
+            // 检查该普通格是否已经绑定了题目
+            let isBound = (customCellQuestions[i] != null);
+            let classNames = `cell ${cellType} ${isBound ? 'bound' : ''}`;
 
             let cellDiv = document.createElement('div');
-            cellDiv.className = `cell ${cellType}`;
+            cellDiv.className = classNames;
             cellDiv.style.left = `${c.left}px`;
             cellDiv.style.top = `${c.top}px`;
             
@@ -432,16 +439,28 @@
             cellDiv.appendChild(numSpan);
 
             let labelSpan = document.createElement('span');
-            labelSpan.style.fontSize = '0.62rem';
+            labelSpan.style.fontSize = '0.6rem';
             labelSpan.style.marginTop = '6px';
-            labelSpan.style.lineHeight = '1.2';
+            labelSpan.style.lineHeight = '1.1';
             
-            if(cellType === 'go') labelSpan.innerHTML = 'GO ➡️<br><span style="font-size:0.5rem">起点 Start</span>';
-            else if(cellType === 'stop') labelSpan.innerHTML = 'STOP 🛑<br><span style="font-size:0.5rem">暂停 Stop</span>';
-            else if(cellType === 'reward') labelSpan.innerHTML = 'REWARD 🎁<br><span style="font-size:0.5rem">奖励随机积分</span>';
-            else if(cellType === 'punish') labelSpan.innerHTML = 'PUNISH ⚡<br><span style="font-size:0.5rem">后退1步 Back 1</span>';
-            else if(cellType === 'chance') labelSpan.innerHTML = 'CHANCE 🎲<br><span style="font-size:0.5rem">再扔一次 Roll</span>';
-            else labelSpan.innerHTML = `题目格子 ${i}<br><span style="font-size:0.5rem">Cell ${i}</span>`;
+            if(cellType === 'go') {
+                labelSpan.innerHTML = 'GO ➡️<br><span style="font-size:0.45rem">起点 Start</span>';
+            } else if(cellType === 'stop') {
+                labelSpan.innerHTML = 'STOP 🛑<br><span style="font-size:0.45rem">暂停 Stop</span>';
+            } else if(cellType === 'reward') {
+                labelSpan.innerHTML = 'REWARD 🎁<br><span style="font-size:0.45rem">奖励随机积分</span>';
+            } else if(cellType === 'punish') {
+                labelSpan.innerHTML = 'PUNISH ⚡<br><span style="font-size:0.45rem">后退1步 Back 1</span>';
+            } else if(cellType === 'chance') {
+                labelSpan.innerHTML = 'CHANCE 🎲<br><span style="font-size:0.45rem">再扔一次 Roll</span>';
+            } else {
+                // 普通题目录入格：如果已绑定，显示“已绑定(Bound)”备注
+                if (isBound) {
+                    labelSpan.innerHTML = `格子 ${i}<br><span style="color:#2563eb; font-weight:bold; font-size:0.5rem;">✅ 已绑定(Bound)</span>`;
+                } else {
+                    labelSpan.innerHTML = `题目格子 ${i}<br><span style="font-size:0.48rem">Cell ${i}</span>`;
+                }
+            }
             
             cellDiv.appendChild(labelSpan);
 
@@ -453,23 +472,31 @@
             mapContainer.appendChild(cellDiv);
         }
 
-        // 初始化教师端格子下拉选项：自动过滤功能格（仅保留 11 个普通的题目录入格）
         populateTeacherCellSelect();
         updateMapScale();
     }
 
-    // 辅助函数：仅向教师端填充普通题目录入格（排除功能格 0, 2, 4, 7, 10, 13, 16）
+    // 辅助函数：填充教师端下拉菜单，并对已绑定题目的格子在备注中明确显示
     function populateTeacherCellSelect() {
         let select = document.getElementById('tCellIndex');
         if (!select) return;
         select.innerHTML = '';
         
-        let functionalCells = [0, 2, 4, 7, 10, 13, 16];
+        let functionalCells = [0, 2, 4, 7, 10, 13, 16]; // 功能格已排除
         for (let i = 0; i < 18; i++) {
             if (!functionalCells.includes(i)) {
                 let opt = document.createElement('option');
                 opt.value = i;
-                opt.textContent = `第 ${i} 号题目录入格 (Question Cell ${i})`;
+                
+                // 检查该格子是否已经绑定了题目，并在备注中显示
+                let hasQuestion = (customCellQuestions[i] != null);
+                if (hasQuestion) {
+                    opt.textContent = `第 ${i} 号题目录入格 (Cell ${i}) — [✅ 已绑定题目 / Bound]`;
+                    opt.style.color = '#2563eb';
+                    opt.style.fontWeight = 'bold';
+                } else {
+                    opt.textContent = `第 ${i} 号题目录入格 (Cell ${i}) — [未绑定 / Empty]`;
+                }
                 select.appendChild(opt);
             }
         }
@@ -491,7 +518,7 @@
         let pwd = prompt("请输入教师管理密码 (Enter Teacher Password):");
         if (pwd === "1020#") {
             document.getElementById('teacherModal').style.display = 'flex';
-            populateTeacherCellSelect();
+            populateTeacherCellSelect(); // 每次打开时刷新下拉菜单中的绑定状态备注
         } else if (pwd !== null) {
             alert("密码错误！Password incorrect!");
         }
@@ -540,13 +567,17 @@
             optC: qType === 'choice' ? document.getElementById('tOptC').value : null,
             ans: qType === 'choice' ? document.getElementById('tCorrectAns').value : null
         };
+        
         alert(`成功为第 ${cellIdx} 号题目录入格绑定定制题目！\nSuccessfully bound customized task to cell ${cellIdx}!`);
+        
         uploadedMediaData = null;
         uploadedAudioData = null;
         document.getElementById('teacherForm').reset();
-        document.getElementById('filePreviewText').textContent = '未选择任何文件 / No file chosen';
+        document.getElementById('filePreviewText').textContent = '未选择任何图片 / No image chosen';
         document.getElementById('audioPreviewText').textContent = '未选择任何音频 / No audio chosen';
+        
         closeTeacherModal();
+        generateBoardCells(); // 重新生成棋盘以实时刷新格子上的“已绑定”显示
     }
 
     socket.on('init_player', (player) => { myPlayer = player; });
