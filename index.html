@@ -3,674 +3,428 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>中文互动大富翁 - 多人实时联机课堂 (Classroom Monopoly)</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <title>七年级中文大富翁 (18格精简版)</title>
     <style>
-        *, *::before, *::after { box-sizing: border-box; }
+        :root {
+            --primary-color: #4a90e2;
+            --success-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --warning-color: #f1c40f;
+            --bg-color: #f0f4f8;
+            --card-bg: #ffffff;
+        }
+
         body {
-            background: radial-gradient(circle at 50% 0%, #232b40 0%, #0c0f16 62%);
-            color: #eaeef8; min-height: 100vh; margin: 0; padding: 10px;
-            display: flex; justify-content: center; align-items: center;
-            font-family: system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-            user-select: none; overflow-x: hidden;
+            font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+            background-color: var(--bg-color);
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
         }
-        .game-container {
-            width: 100%; max-width: 1400px; background: rgba(255, 255, 255, 0.96);
-            color: #333; border-radius: 16px; box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
-            display: flex; flex-direction: column; overflow: hidden;
+
+        .container {
+            width: 100%;
+            max-width: 650px;
+            background: var(--card-bg);
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            overflow: hidden;
+            border: 2px solid #ddd;
         }
+
         .header {
-            background: linear-gradient(to right, #ff416c, #ff4b2b); color: white;
-            padding: 15px 20px; text-align: center; position: relative;
-        }
-        .header h1 { font-size: 2.2rem; margin-bottom: 3px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
-        .header p { font-size: 1rem; opacity: 0.9; }
-
-        /* 初始登录遮罩层 */
-        .login-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(12, 15, 22, 0.9); display: flex;
-            justify-content: center; align-items: center; z-index: 2000;
-        }
-        .login-card {
-            background: #fff; padding: 30px; border-radius: 15px; width: 90%; max-width: 420px;
-            text-align: center; color: #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative;
-        }
-        .login-card h2 { margin-bottom: 15px; color: #ff4b2b; }
-        .login-card input {
-            width: 100%; padding: 12px; font-size: 1.1rem; border: 2px solid #cbd5e1;
-            border-radius: 8px; margin-bottom: 15px; text-align: center;
+            background: var(--primary-color);
+            color: white;
+            padding: 15px;
+            text-align: center;
         }
 
-        /* 初始界面的教师端入口按钮 */
-        .initial-teacher-btn {
-            background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 8px 16px;
-            font-size: 0.9rem; font-weight: bold; border-radius: 30px; cursor: pointer;
-            margin-top: 10px; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;
-        }
-        .initial-teacher-btn:hover { background: #e2e8f0; color: #1e293b; }
+        .header h1 { margin: 0; font-size: 1.4em; }
+        .header p { margin: 3px 0 0; opacity: 0.9; font-size: 0.9em; }
 
-        .game-content { display: flex; flex-wrap: wrap; }
-        .game-board-pane {
-            flex: 3; min-width: 520px; padding: 15px; background-color: #f0f4f8;
-            border-right: 2px dashed #ddd; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; position: relative; overflow: hidden;
-        }
-        .game-info-pane {
-            flex: 2; min-width: 380px; padding: 15px; display: flex;
-            flex-direction: column; gap: 12px; max-height: 780px; overflow-y: auto;
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 20px;
+            background: #eef2f7;
+            border-bottom: 1px solid #ddd;
+            font-weight: bold;
         }
 
-        .map-viewport { width: 100%; max-width: 840px; aspect-ratio: 840 / 620; position: relative; margin: auto; }
-        .map-container {
-            width: 840px; height: 620px; position: absolute; top: 0; left: 0;
-            background-color: #ffffff; border-radius: 12px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.08); border: 4px solid #333; transform-origin: top left;
+        /* 18格简易棋盘可视化预览条 */
+        .board-preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            padding: 10px;
+            background: #e2e8f0;
+            justify-content: center;
+        }
+        .board-cell-mini {
+            width: 30px;
+            height: 30px;
+            background: #fff;
+            font-size: 0.7em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            border: 1px solid #cbd5e1;
+            font-weight: bold;
+        }
+        .cell-go { background: #ffebee !important; color: #c62828; }
+        .cell-reward { background: #e8f5e9 !important; color: #2e7d32; }
+        .cell-punish { background: #fce4ec !important; color: #c2185b; }
+        .cell-stop { background: #fff3e0 !important; color: #e65100; }
+        .cell-chance { background: #ede7f6 !important; color: #512da8; }
+        .cell-active { border: 2px solid #e74c3c !important; transform: scale(1.1); }
+
+        .game-area {
+            padding: 20px;
+            min-height: 280px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
         }
 
-        /* 棋盘格子外观与排版优化 */
-        .cell {
-            position: absolute; width: 78px; height: 78px; background: #ffffff;
-            border: 2px solid #333; border-radius: 8px;
-            display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            font-weight: bold; font-size: 0.65rem; text-align: center; padding: 2px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.05); transition: transform 0.2s;
+        .dice-display {
+            font-size: 3em;
+            margin-bottom: 10px;
+            animation: bounce 0.5s infinite alternate;
+            display: none;
         }
-        .cell:hover { transform: scale(1.03); z-index: 10; }
-        .cell-num { position: absolute; top: 2px; left: 4px; font-size: 0.55rem; color: #666; font-weight: bold; }
+
+        .event-card {
+            width: 100%;
+            border: 2px dashed #ccc;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            background: #fafafa;
+        }
+
+        .event-type-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 15px;
+            color: white;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+
+        .type-grammar { background-color: #3498db; } 
+        .type-dialog { background-color: #e91e63; } 
+        .type-chance { background-color: #f39c12; } 
+        .type-reward { background-color: #2ecc71; }
+        .type-punish { background-color: #e74c3c; }
+        .type-stop { background-color: #e65100; }
+
+        .question-text {
+            font-size: 1.1em;
+            margin-bottom: 10px;
+            white-space: pre-wrap; 
+        }
         
-        /* 低饱和度功能色彩 */
-        .cell.go { background: #ffebee; border-color: #e57373; color: #c62828; }
-        .cell.stop { background: #fff3e0; border-color: #ffb74d; color: #e65100; }
-        .cell.reward { background: #e8f5e9; border-color: #81c784; color: #2e7d32; }
-        .cell.punish { background: #fce4ec; border-color: #f48fb1; color: #c2185b; }
-        .cell.chance { background: #ede7f6; border-color: #b39ddb; color: #512da8; }
-        .cell.normal { background: #f8fafc; border-color: #cbd5e1; color: #334155; }
-
-        .board-center-banner {
-            position: absolute; top: 160px; left: 140px; width: 560px; height: 300px;
-            display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none;
-        }
-        .center-red-title {
-            background: linear-gradient(135deg, #ff416c, #ff4b2b); color: white; font-size: 3.5rem; font-weight: bold;
-            padding: 10px 60px; transform: rotate(-5deg); box-shadow: 0 8px 20px rgba(0,0,0,0.2); border: 4px solid #fff;
-            border-radius: 12px;
+        .options-grid {
+            display: grid;
+            gap: 10px;
+            width: 100%;
         }
 
-        .turn-announcement {
-            background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
-            color: #742a2a; padding: 12px; border-radius: 10px; text-align: center;
-            font-weight: bold; font-size: 1.1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: transform 0.1s, background 0.2s;
+            width: 100%;
         }
 
-        /* 3D 骰子舞台 */
-        .center-dice-modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1500;
+        .btn:active { transform: scale(0.98); }
+        .btn-primary { background: var(--primary-color); color: white; font-weight: bold; font-size: 1.1em; }
+        .btn-option { background: #f8f9fa; border: 2px solid #e9ecef; color: #333; text-align: left; }
+        .btn-option:hover { background: #e9ecef; }
+        
+        .feedback-area {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            width: 100%;
+            display: none;
         }
-        .dice-stage-large { width: 130px; height: 130px; perspective: 900px; margin: 20px auto; }
-        .die-large {
-            position: relative; width: 100%; height: 100%; transform-style: preserve-3d;
-            transform: rotateX(0deg) rotateY(0deg); transition-property: transform;
-            transition-timing-function: cubic-bezier(.2, .7, .22, 1);
-        }
-        .face-large {
-            position: absolute; inset: 0; display: grid; grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(3, 1fr); gap: 8%; padding: 12%; border-radius: 15%;
-            background: radial-gradient(circle at 32% 26%, #ffffff 0%, #f2f5fa 55%, #dbe2ee 100%);
-            box-shadow: inset 0 0 0 1px rgba(255,255,255,.85), inset 0 -9px 16px rgba(120, 136, 168, .22), inset 0 7px 12px rgba(255, 255, 255, .95);
-            border: 1px solid rgba(0,0,0,0.1);
-        }
-        .face-large .pip {
-            width: 100%; height: 100%; place-self: center; border-radius: 50%;
-            background: radial-gradient(circle at 34% 28%, #4b5570 0%, #0e1219 78%);
-            box-shadow: inset 0 1px 2px rgba(255,255,255,.28); opacity: 0; transform: scale(.82);
-        }
-        .face-large .pip.on { opacity: 1; }
-        .face-large.front  { transform: translateZ(65px); }
-        .face-large.back   { transform: rotateY(180deg) translateZ(65px); }
-        .face-large.right  { transform: rotateY(90deg)  translateZ(65px); }
-        .face-large.left   { transform: rotateY(-90deg) translateZ(65px); }
-        .face-large.top    { transform: rotateX(90deg)  translateZ(65px); }
-        .face-large.bottom { transform: rotateX(-90deg) translateZ(65px); }
 
-        @keyframes pop {
-            0%   { transform: scale(1); }
-            45%  { transform: scale(1.08); }
-            100% { transform: scale(1); }
-        }
-        .die-large.pop { animation: pop .28s ease-out; }
+        .correct { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .incorrect { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .hidden { display: none; }
 
-        .roll-btn {
-            background: linear-gradient(135deg, #ff416c, #ff4b2b); color: white; border: none;
-            padding: 14px 40px; font-size: 1.2rem; font-weight: bold; border-radius: 50px;
-            cursor: pointer; box-shadow: 0 6px 20px rgba(255, 65, 108, 0.4); width: 100%;
-            transition: transform .16s ease, box-shadow .16s ease;
-        }
-        .roll-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(255, 65, 108, 0.6); }
-        .roll-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-        .player-tokens { display: flex; flex-wrap: wrap; gap: 2px; justify-content: center; align-items: center; margin-top: 4px; }
-        .token { width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; color: white; border: 1px solid #fff; }
-
-        .players-status-box { background: #fff; padding: 12px 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        .players-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; max-height: 180px; overflow-y: auto; }
-        .player-card { background: #f8fafc; padding: 6px 10px; border-radius: 8px; display: flex; align-items: center; gap: 8px; border-left: 4px solid #cbd5e1; font-size: 0.85rem; }
-        .player-card.active { background: #e0f2fe; border-left-color: #0284c7; font-weight: bold; }
-        .history-box { background: #fff; padding: 12px 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); flex-grow: 1; display: flex; flex-direction: column; }
-        .history-list { font-size: 0.8rem; color: #475569; max-height: 110px; overflow-y: auto; margin-top: 6px; }
-
-        /* 弹窗及教师端 */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 2500;
-        }
-        .modal-card {
-            background: white; width: 90%; max-width: 600px; border-radius: 15px;
-            padding: 25px; box-shadow: 0 15px 40px rgba(0,0,0,0.3); position: relative; max-height: 90vh; overflow-y: auto; color: #333;
-        }
-        .modal-close { position: absolute; top: 15px; right: 20px; font-size: 1.5rem; cursor: pointer; color: #666; }
-        .modal-title { font-size: 1.4rem; margin-bottom: 15px; color: #1e293b; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-        .form-group { margin-bottom: 12px; }
-        .form-group label { display: block; font-weight: bold; margin-bottom: 4px; color: #475569; font-size: 0.9rem; }
-        .form-group input, .form-group select, .form-group textarea {
-            width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem;
-        }
-        .quiz-modal, .grading-modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 3000; color: #333;
-        }
-        .quiz-card {
-            background: #fff; width: 90%; max-width: 550px; padding: 30px; border-radius: 16px; text-align: center;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+        @keyframes bounce {
+            from { transform: translateY(0); }
+            to { transform: translateY(-10px); }
         }
     </style>
 </head>
 <body>
 
-<!-- 学生登录与命名遮罩层 (同时集成教师端入口) -->
-<div class="login-overlay" id="loginOverlay">
-    <div class="login-card">
-        <h2>🎮 加入大富翁联机课堂<br><span style="font-size:0.8rem; color:#666;">Join Multiplayer Classroom</span></h2>
-        <p style="font-size: 0.9rem; color: #666; margin-bottom: 15px;">请输入你的名字加入游戏，系统将为你自动分配专属角色！<br>Enter your name to join:</p>
-        <input type="text" id="playerNameInput" placeholder="例如：Fatima / 玛丽亚" maxlength="15">
-        <button class="roll-btn" onclick="joinGame()">进入游戏 (Join Game)</button>
-        
-        <!-- 教师端入口按钮移至初始加入界面，带有 1020# 密码保护 -->
-        <button class="initial-teacher-btn" onclick="openTeacherModal()">
-            <i class="fas fa-cog"></i> 教师端题库录入 (Teacher Console)
-        </button>
-    </div>
-</div>
-
-<div class="game-container">
+<div class="container">
     <div class="header">
-        <h1>🎲 中文互动大富翁 - 多人实时联机课堂</h1>
-        <p>Real-time Multiplayer Classroom Edition</p>
+        <h1>🎓 七年级中文大富翁 (18格精简版)</h1>
+        <p>7个功能格 + 11个题目录入格</p>
     </div>
 
-    <div class="turn-announcement" id="turnAnnouncement">
-        ⏳ 正在连接服务器... / Connecting to server...
+    <!-- 18格棋盘可视化简图 -->
+    <div class="board-preview" id="board-preview"></div>
+
+    <div class="status-bar">
+        <span>📍 当前位置: <span id="location-name">起点 (GO)</span></span>
+        <span>💰 金币: <span id="gold-display">1000</span></span>
     </div>
 
-    <div class="game-content">
-        <div class="game-board-pane">
-            <div class="map-viewport" id="mapViewport">
-                <div class="map-container" id="mapContainer">
-                    <div class="board-center-banner">
-                        <div class="center-red-title">大富翁</div>
-                    </div>
-                </div>
-            </div>
+    <div class="game-area" id="game-area">
+        <div id="start-screen">
+            <h2>欢迎来到中文课堂游戏！</h2>
+            <p>本局共有 18 个格子，包含各类题目录入格与趣味功能格。</p>
+            <br>
+            <button class="btn btn-primary" onclick="startGame()">开始游戏 (Start)</button>
         </div>
 
-        <div class="game-info-pane">
-            <div style="background: #fff; padding: 15px; border-radius: 12px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-                <button class="roll-btn" id="rollBtn" onclick="requestRoll()" disabled>
-                    <i class="fas fa-dice"></i> 投掷骰子 (Roll Dice)
-                </button>
-            </div>
-
-            <div class="players-status-box">
-                <h3 style="margin-bottom: 8px; font-size: 1rem;"><i class="fas fa-users"></i> 在线玩家 (Online Players)</h3>
-                <div class="players-grid" id="playersGrid"></div>
-            </div>
-
-            <div class="history-box">
-                <h3><i class="fas fa-history"></i> 游戏动态 (Game Log)</h3>
-                <div class="history-list" id="historyList">
-                    <div>🎮 联机通道已就绪。 / Connection ready.</div>
-                </div>
-            </div>
+        <div id="dice-screen" class="hidden">
+            <div id="dice-anim" class="dice-display">🎲</div>
+            <p id="move-text">轮到你了，点击按钮掷骰子！</p>
+            <button class="btn btn-primary" id="roll-btn" onclick="rollDice()">掷骰子 (Roll Dice)</button>
         </div>
-    </div>
-</div>
 
-<!-- 3D 骰子舞台 -->
-<div class="center-dice-modal" id="diceModal">
-    <div style="background: #fff; padding: 30px; border-radius: 20px; text-align: center; width: 300px;">
-        <h3 style="color: #333; margin-bottom: 10px;">🎲 正在投掷骰子...<br><span style="font-size:0.8rem; color:#666;">Rolling Dice...</span></h3>
-        <div class="dice-stage-large">
-            <div class="die-large" id="largeDie"></div>
+        <div id="question-screen" class="hidden">
+            <div id="event-badge" class="event-type-badge"></div>
+            <div class="event-card">
+                <div id="q-hanzi" class="question-text"></div>
+                <div id="options-container" class="options-grid"></div>
+            </div>
+            <div id="feedback" class="feedback-area"></div>
+            <button id="next-btn" class="btn btn-primary hidden" onclick="returnToDice()">继续游戏 (Continue)</button>
         </div>
-        <div id="diceResultText" style="font-size: 1.2rem; font-weight: bold; color: #ff4b2b; margin-top: 15px;"></div>
-    </div>
-</div>
-
-<!-- 教师端录入管理弹窗（带 1020# 密码保护） -->
-<div class="modal-overlay" id="teacherModal">
-    <div class="modal-card">
-        <span class="modal-close" onclick="closeTeacherModal()">&times;</span>
-        <div class="modal-title"><i class="fas fa-upload"></i> 教师端题库录入系统 <span style="font-size:0.8rem; color:#666;">(Teacher Console)</span></div>
-        <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 12px;">为任意棋盘格子绑定定制练习（支持选择题或无选项图片上传实操题）。</p>
         
-        <form id="teacherForm" onsubmit="saveTeacherQuestion(event)">
-            <div class="form-group">
-                <label>选择绑定的格子编号 (Cell Index 0 - 23):</label>
-                <select id="tCellIndex"></select>
+        <div id="special-screen" class="hidden">
+            <div id="special-badge" class="event-type-badge"></div>
+            <div class="event-card">
+                <p id="special-msg" class="question-text"></p>
             </div>
-            <div class="form-group">
-                <label>题目类型 (Question Type):</label>
-                <select id="tQuestionType" onchange="toggleQuestionTypeFields()">
-                    <option value="choice">选择题 (Multiple Choice)</option>
-                    <option value="image_upload">图片实操题 (Image Upload Task)</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>题目内容 / 要求说明 (Question Content):</label>
-                <textarea id="tQuestionText" rows="2" placeholder="例如：请在纸上写出本课生词并拍照上传"></textarea>
-            </div>
-            <div class="form-group">
-                <label>参考样图或附件 (Optional Media):</label>
-                <input type="file" id="tMediaFile" accept="image/*,.pdf" onchange="handleFileupload(event)">
-                <div class="file-preview" id="filePreviewText" style="font-size:0.8rem; color:#666;">未选择任何文件 / No file chosen</div>
-            </div>
-
-            <div id="choiceFieldsContainer">
-                <div class="form-group"><label>选项 A (Option A):</label><input type="text" id="tOptA" placeholder="A. 铅笔 (qiānbǐ)"></div>
-                <div class="form-group"><label>选项 B (Option B):</label><input type="text" id="tOptB" placeholder="B. 尺子 (chǐzi)"></div>
-                <div class="form-group"><label>选项 C (Option C):</label><input type="text" id="tOptC" placeholder="C. 橡皮 (xiàngpí)"></div>
-                <div class="form-group">
-                    <label>正确答案 (Correct Answer):</label>
-                    <select id="tCorrectAns"><option value="A">选项 A</option><option value="B">选项 B</option><option value="C">选项 C</option></select>
-                </div>
-            </div>
-
-            <button type="submit" class="roll-btn" style="padding: 10px; font-size: 1rem; margin-top: 10px;">保存并绑定 (Save & Bind)</button>
-        </form>
-    </div>
-</div>
-
-<!-- 学生答题弹窗（图片上传题模式） -->
-<div class="quiz-modal" id="studentQuizModal">
-    <div class="quiz-card">
-        <h2 style="color: #ff4b2b; margin-bottom: 10px;">📸 闯关实操任务<br><span style="font-size:0.8rem; color:#666;">Practical Task Challenge</span></h2>
-        <p id="quizQuestionText" style="font-size: 1.1rem; margin-bottom: 15px; font-weight: bold;"></p>
-        <div id="quizMediaContainer" style="margin-bottom: 15px;"></div>
-        
-        <div style="background: #fff3cd; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 0.95rem; color: #856404;">
-            ⏱️ 剩余反应时间 (Time Remaining): <span id="timerCountdown" style="font-weight: bold; font-size: 1.2rem;">300</span> 秒 (sec)
-        </div>
-
-        <div class="form-group">
-            <label style="font-weight: bold; margin-bottom: 5px;">请拍照或上传你已完成的作业图片：<br><span style="font-size:0.8rem; color:#666;">Upload your completed work:</span></label>
-            <input type="file" id="studentUploadInput" accept="image/*" onchange="submitStudentImage(event)">
-        </div>
-    </div>
-</div>
-
-<!-- 教师端审核批改弹窗 -->
-<div class="grading-modal" id="teacherGradingModal">
-    <div class="quiz-card" style="max-width: 650px;">
-        <h2 style="color: #2563eb; margin-bottom: 10px;">🧑‍🏫 教师批改学生作业<br><span style="font-size:0.8rem; color:#666;">Teacher Review</span></h2>
-        <p id="gradingPlayerInfo" style="font-size: 1rem; color: #475569; margin-bottom: 15px;"></p>
-        <div style="margin: 15px 0; border: 2px solid #e2e8f0; border-radius: 8px; padding: 10px; background: #f8fafc;">
-            <img id="gradingStudentImg" src="" alt="学生提交的图片" style="max-width: 100%; max-height: 300px; border-radius: 6px;">
-        </div>
-        <div style="display: flex; gap: 15px; justify-content: center; margin-top: 20px;">
-            <button onclick="gradeResult(false)" style="background: #ef4444; color: white; border: none; padding: 12px 30px; font-size: 1.1rem; font-weight: bold; border-radius: 8px; cursor: pointer;">❌ 不通过 (Fail / Stay)</button>
-            <button onclick="gradeResult(true)" style="background: #22c55e; color: white; border: none; padding: 12px 30px; font-size: 1.1rem; font-weight: bold; border-radius: 8px; cursor: pointer;">✅ 通过 (Pass / Move)</button>
+            <button class="btn btn-primary" onclick="returnToDice()">确定 (OK)</button>
         </div>
     </div>
 </div>
 
 <script>
-    const SOCKET_SERVER_URL = "https://monopoly-backend-pqyr.onrender.com"; 
-    const socket = io(SOCKET_SERVER_URL);
-
-    let myPlayer = null;
-    let customCellQuestions = {};
-    let uploadedMediaData = null;
-    let quizTimer = null;
-
-    const PIPS = { 1: [5], 2: [1, 9], 3: [1, 5, 9], 4: [1, 3, 7, 9], 5: [1, 3, 5, 7, 9], 6: [1, 3, 4, 6, 7, 9] };
-    const FACES = [
-        { value: 1, cls: 'front' }, { value: 6, cls: 'back' },
-        { value: 3, cls: 'right' }, { value: 4, cls: 'left' },
-        { value: 2, cls: 'top' }, { value: 5, cls: 'bottom' }
+    // --- 18格棋盘定义 (包含 7 个功能格和 11 个题目录入格) ---
+    // 类型说明: 'go'=起点, 'q'=题目录入格, 'reward'=奖励格, 'punish'=惩罚格, 'stop'=暂停格, 'chance'=机会格
+    const board = [
+        { id: 0, type: 'go', name: '起点 (GO)' },
+        { id: 1, type: 'q', name: '题目录入格 1' },
+        { id: 2, type: 'q', name: '题目录入格 2' },
+        { id: 3, type: 'reward', name: '奖励格 (Reward)' },       // 功能格1
+        { id: 4, type: 'q', name: '题目录入格 3' },
+        { id: 5, type: 'q', name: '题目录入格 4' },
+        { id: 6, type: 'stop', name: '暂停格 (Stop)' },           // 功能格2
+        { id: 7, type: 'q', name: '题目录入格 5' },
+        { id: 8, type: 'punish', name: '惩罚格 (Punish)' },       // 功能格3
+        { id: 9, type: 'chance', name: '机会格 (Chance)' },       // 功能格4
+        { id: 10, type: 'q', name: '题目录入格 6' },
+        { id: 11, type: 'reward', name: '奖励格 (Reward)' },      // 功能格5
+        { id: 12, type: 'q', name: '题目录入格 7' },
+        { id: 13, type: 'q', name: '题目录入格 8' },
+        { id: 14, type: 'stop', name: '暂停格 (Stop)' },          // 功能格6
+        { id: 15, type: 'q', name: '题目录入格 9' },
+        { id: 16, type: 'q', name: '题目录入格 10' },
+        { id: 17, type: 'chance', name: '机会格 (Chance)' }       // 功能格7
     ];
-    const TARGET = {
-        1: { x: 0, y: 0 }, 2: { x: -90, y: 0 }, 3: { x: 0, y: -90 },
-        4: { x: 0, y: 90 }, 5: { x: 90, y: 0 }, 6: { x: 0, y: 180 }
-    };
 
-    function initLargeDice() {
-        const stage = document.getElementById('largeDie');
-        stage.innerHTML = '';
-        FACES.forEach(f => {
-            const face = document.createElement('div');
-            face.className = `face-large ${f.cls}`;
-            for (let i = 1; i <= 9; i++) {
-                const pip = document.createElement('span');
-                pip.className = 'pip' + (PIPS[f.value].includes(i) ? ' on' : '');
-                face.appendChild(pip);
-            }
-            stage.appendChild(face);
+    // --- 题库数据 (适用于 11 个题目录入格) ---
+    const questionDb = [
+        {"Q":"他是哈迪( )？\nTā shì Hādí ( )?", "Opts":["A. 吗 (ma)","B. 不 (bù)","C. 很 (hěn)"], "Ans":"A", "type":"grammar"},
+        {"Q":"( )不是纳达。\n( ) bú shì Nádá.", "Opts":["A. 吗 (ma)","B. 她 (tā)","C. 什么 (shénme)"], "Ans":"B", "type":"grammar"},
+        {"Q":"我( )笔。\nWǒ ( ) bǐ.", "Opts":["A. 吗 (ma)","B. 有 (yǒu)","C. 是 (shì)"], "Ans":"B", "type":"grammar"},
+        {"Q":"他有( )吗？\nTā yǒu ( ) ma?", "Opts":["A. 笔 (bǐ)","B. 吗 (ma)","C. 谁 (shéi)"], "Ans":"A", "type":"grammar"},
+        {"Q":"我有笔，( )你。\nWǒ yǒu bǐ, ( ) nǐ.", "Opts":["A. 给 (gěi)","B. 和 (hé)","C. 去 (qù)"], "Ans":"A", "type":"grammar"},
+        {"Q":"他们去( )。\nTāmen qù ( ).", "Opts":["A. 公园 (gōngyuán)","B. 吗 (ma)","C. 谁 (shéi)"], "Ans":"A", "type":"grammar"},
+        {"Q":"A: 他是阿里吗？\nA: Tā shì Ālǐ ma?", "Opts":["A. 是，他是阿里。","B. 他不是书。","C. 我没有。"], "Ans":"A", "type":"dialog"},
+        {"Q":"A: 你有笔吗？\nA: Nǐ yǒu bǐ ma?", "Opts":["A. 他是。","B. 我没有。","C. 再见。"], "Ans":"B", "type":"dialog"},
+        {"Q":"A: 这是你的书吗？\nA: Zhè shì nǐ de shū ma?", "Opts":["A. 谢谢。","B. 不是，这是我的。","C. 是，这是我的书。"], "Ans":"C", "type":"dialog"},
+        {"Q":"A: 你们去哪儿？\nA: Nǐmen qù nǎr?", "Opts":["A. 我们去公园。","B. 我是学生。","C. 他很高兴。"], "Ans":"A", "type":"dialog"},
+        {"Q":"A: 今天星期几？\nA: Jīntiān xīngqī jǐ?", "Opts":["A. 今天星期三。","B. 我不去。","C. 我有中文课。"], "Ans":"A", "type":"dialog"}
+    ];
+
+    let currentPos = 0;
+    let gold = 1000;
+    let currentQuestion = null;
+
+    // 初始化渲染棋盘预览条
+    function renderBoardPreview() {
+        const preview = document.getElementById('board-preview');
+        preview.innerHTML = '';
+        board.forEach((cell, idx) => {
+            const div = document.createElement('div');
+            div.className = `board-cell-mini cell-${cell.type}`;
+            div.id = `mini-cell-${idx}`;
+            div.innerText = idx;
+            div.title = cell.name;
+            preview.appendChild(div);
         });
+        updateBoardHighlight();
     }
 
-    function joinGame() {
-        let nameInput = document.getElementById('playerNameInput').value.trim();
-        if(!nameInput) { alert("请输入你的名字！Please enter your name!"); return; }
-        socket.emit('join_game', { name: nameInput });
-        document.getElementById('loginOverlay').style.display = 'none';
-        generateBoardCells();
+    function updateBoardHighlight() {
+        document.querySelectorAll('.board-cell-mini').forEach(el => el.classList.remove('cell-active'));
+        const activeEl = document.getElementById(`mini-cell-${currentPos}`);
+        if (activeEl) activeEl.classList.add('cell-active');
     }
 
-    // 严丝合缝的 24 格环形坐标与不重叠布局算法
-    function generateBoardCells() {
-        const mapContainer = document.getElementById('mapContainer');
-        mapContainer.querySelectorAll('.cell').forEach(c => c.remove());
+    function startGame() {
+        document.getElementById('start-screen').classList.add('hidden');
+        document.getElementById('dice-screen').classList.remove('hidden');
+        renderBoardPreview();
+    }
+
+    function rollDice() {
+        const btn = document.getElementById('roll-btn');
+        const anim = document.getElementById('dice-anim');
+        const text = document.getElementById('move-text');
         
-        let coords = [];
-        for(let i = 0; i <= 6; i++) {
-            coords.push({ index: i, left: i * 110 + 18, top: 18 });
-        }
-        for(let i = 1; i <= 5; i++) {
-            coords.push({ index: 6 + i, left: 742, top: i * 98 + 18 });
-        }
-        for(let i = 0; i <= 5; i++) {
-            coords.push({ index: 12 + i, left: 742 - i * 110, top: 522 });
-        }
-        for(let i = 1; i <= 6; i++) {
-            coords.push({ index: 18 + i - 1, left: 18, top: 522 - i * 98 });
-        }
-
-        // 7个功能性格子精确定位配置
-        let specialTypes = {
-            0: 'go',        /* cell 0 设为 GO ➡️ */
-            3: 'reward',    /* 奖励积分 (Random Reward) */
-            6: 'stop',      /* 暂停 (Stop) */
-            9: 'punish',    /* 后退1步 (Back 1 step) */
-            13: 'reward',   /* 奖励积分 (Random Reward) */
-            17: 'chance',   /* 再扔一次 (Roll Again) */
-            21: 'punish'    /* 后退1步 (Back 1 step) */
-        };
-
-        let uniqueCoords = {};
-        coords.forEach(c => uniqueCoords[c.index] = c);
-        
-        for(let i = 0; i < 24; i++) {
-            let c = uniqueCoords[i] || { index: i, left: 18, top: 18 };
-            let cellType = specialTypes[i] || 'normal';
-
-            let cellDiv = document.createElement('div');
-            cellDiv.className = `cell ${cellType}`;
-            cellDiv.style.left = `${c.left}px`;
-            cellDiv.style.top = `${c.top}px`;
-            
-            let numSpan = document.createElement('span');
-            numSpan.className = 'cell-num';
-            numSpan.textContent = i;
-            cellDiv.appendChild(numSpan);
-
-            let labelSpan = document.createElement('span');
-            labelSpan.style.fontSize = '0.58rem';
-            labelSpan.style.marginTop = '4px';
-            labelSpan.style.lineHeight = '1.1';
-            
-            if(cellType === 'go') labelSpan.innerHTML = 'GO ➡️<br><span style="font-size:0.48rem">起点 Start</span>';
-            else if(cellType === 'stop') labelSpan.innerHTML = 'STOP 🛑<br><span style="font-size:0.48rem">暂停 Stop</span>';
-            else if(cellType === 'reward') labelSpan.innerHTML = 'REWARD 🎁<br><span style="font-size:0.48rem">奖励随机积分</span>';
-            else if(cellType === 'punish') labelSpan.innerHTML = 'PUNISH ⚡<br><span style="font-size:0.48rem">后退1步 Back 1</span>';
-            else if(cellType === 'chance') labelSpan.innerHTML = 'CHANCE 🎲<br><span style="font-size:0.48rem">再扔一次 Roll</span>';
-            else labelSpan.innerHTML = `格子 ${i}<br><span style="font-size:0.48rem">Cell ${i}</span>`;
-            
-            cellDiv.appendChild(labelSpan);
-
-            let tokenContainer = document.createElement('div');
-            tokenContainer.className = 'player-tokens';
-            tokenContainer.id = `tokens-cell-${i}`;
-            cellDiv.appendChild(tokenContainer);
-
-            mapContainer.appendChild(cellDiv);
-        }
-
-        // 初始化教师端格子下拉选项
-        let select = document.getElementById('tCellIndex');
-        if (select) {
-            select.innerHTML = '';
-            for(let i=0; i<24; i++) {
-                let opt = document.createElement('option');
-                opt.value = i; opt.textContent = `第 ${i} 号格子 (Cell ${i})`;
-                select.appendChild(opt);
-            }
-        }
-        updateMapScale();
-    }
-
-    function updateMapScale() {
-        const viewport = document.getElementById('mapViewport');
-        const container = document.getElementById('mapContainer');
-        if (!viewport || !container) return;
-        const scale = viewport.clientWidth / 840;
-        container.style.transform = `scale(${scale})`;
-        viewport.style.height = `${620 * scale}px`;
-    }
-
-    function requestRoll() { socket.emit('roll_dice'); }
-
-    // 教师端密码保护 (1020#)
-    function openTeacherModal() {
-        let pwd = prompt("请输入教师管理密码 (Enter Teacher Password):");
-        if (pwd === "1020#") {
-            document.getElementById('teacherModal').style.display = 'flex';
-            // 确保打开弹窗时下拉菜单已初始化
-            let select = document.getElementById('tCellIndex');
-            if (select && select.options.length === 0) {
-                for(let i=0; i<24; i++) {
-                    let opt = document.createElement('option');
-                    opt.value = i; opt.textContent = `第 ${i} 号格子 (Cell ${i})`;
-                    select.appendChild(opt);
-                }
-            }
-        } else if (pwd !== null) {
-            alert("密码错误！Password incorrect!");
-        }
-    }
-
-    function closeTeacherModal() { document.getElementById('teacherModal').style.display = 'none'; }
-
-    function toggleQuestionTypeFields() {
-        let qType = document.getElementById('tQuestionType').value;
-        let choiceContainer = document.getElementById('choiceFieldsContainer');
-        choiceContainer.style.display = (qType === 'image_upload') ? 'none' : 'block';
-    }
-
-    function handleFileupload(event) {
-        let file = event.target.files[0];
-        if(file) {
-            document.getElementById('filePreviewText').textContent = `已选择文件: ${file.name}`;
-            let reader = new FileReader();
-            reader.onload = function(e) { uploadedMediaData = { url: e.target.result, type: file.type }; };
-            reader.readAsDataURL(file);
-        }
-    }
-
-    function saveTeacherQuestion(e) {
-        e.preventDefault();
-        let cellIdx = document.getElementById('tCellIndex').value;
-        let qType = document.getElementById('tQuestionType').value;
-
-        customCellQuestions[cellIdx] = {
-            type: qType,
-            question: document.getElementById('tQuestionText').value,
-            mediaUrl: uploadedMediaData ? uploadedMediaData.url : null,
-            optA: qType === 'choice' ? document.getElementById('tOptA').value : null,
-            optB: qType === 'choice' ? document.getElementById('tOptB').value : null,
-            optC: qType === 'choice' ? document.getElementById('tOptC').value : null,
-            ans: qType === 'choice' ? document.getElementById('tCorrectAns').value : null
-        };
-        alert(`成功为第 ${cellIdx} 号格子绑定定制题目！\nSuccessfully bound customized task to cell ${cellIdx}!`);
-        uploadedMediaData = null;
-        document.getElementById('teacherForm').reset();
-        document.getElementById('filePreviewText').textContent = '未选择任何文件 / No file chosen';
-        closeTeacherModal();
-    }
-
-    socket.on('init_player', (player) => { myPlayer = player; });
-
-    socket.on('update_game_state', (state) => {
-        for(let i=0; i<24; i++) {
-            let container = document.getElementById(`tokens-cell-${i}`);
-            if(container) container.innerHTML = '';
-        }
-        state.players.forEach(p => {
-            let container = document.getElementById(`tokens-cell-${p.position}`);
-            if(container) {
-                let token = document.createElement('div');
-                token.className = 'token';
-                token.style.background = p.color;
-                token.textContent = p.icon;
-                container.appendChild(token);
-            }
-        });
-
-        let grid = document.getElementById('playersGrid');
-        grid.innerHTML = '';
-        state.players.forEach((p, idx) => {
-            let card = document.createElement('div');
-            card.className = `player-card ${idx === state.currentPlayerIndex ? 'active' : ''}`;
-            card.innerHTML = `
-                <span style="font-size: 1.2rem;">${p.icon}</span>
-                <div style="flex-grow: 1;">
-                    <div style="font-weight: bold;">${p.name}</div>
-                    <div style="font-size: 0.75rem; color: #64748b;">金币/积分 (Gold): ${p.gold} | 位置 (Pos): ${p.position}</div>
-                </div>
-            `;
-            grid.appendChild(card);
-        });
-
-        let curr = state.players[state.currentPlayerIndex];
-        let announcement = document.getElementById('turnAnnouncement');
-        if(curr) {
-            announcement.innerHTML = `👉 该由 <span style="color:#d32f2f;">${curr.name} (${curr.icon})</span> 进行投掷骰子！<br><span style="font-size:0.9rem; font-weight:normal;">It's ${curr.name}'s turn to roll the dice!</span>`;
-            
-            let rollBtn = document.getElementById('rollBtn');
-            if(myPlayer && myPlayer.id === curr.id) {
-                rollBtn.disabled = false;
-            } else {
-                rollBtn.disabled = true;
-            }
-        }
-    });
-
-    function nextAngle(current, target, minSpins) {
-        const min = current + minSpins * 360;
-        const rem = ((target - min) % 360 + 360) % 360;
-        return min + rem;
-    }
-
-    let currentRotX = 0;
-    let currentRotY = 0;
-
-    socket.on('play_dice_animation', (data) => {
-        document.getElementById('diceModal').style.display = 'flex';
-        let die = document.getElementById('largeDie');
-        let t = TARGET[data.steps];
-
-        const nx = nextAngle(currentRotX, t.x, 3);
-        const ny = nextAngle(currentRotY, t.y, 3);
-        currentRotX = nx;
-        currentRotY = ny;
-
-        const dur = 1100 + Math.random() * 200;
-        die.style.transitionDuration = dur + 'ms';
-        die.style.transform = `rotateX(${nx}deg) rotateY(${ny}deg)`;
-        document.getElementById('diceResultText').textContent = `${data.playerName} 掷出了 ${data.steps} 点！(Rolled ${data.steps})`;
+        btn.disabled = true;
+        anim.style.display = 'block';
+        text.innerText = "正在掷骰子...";
 
         setTimeout(() => {
-            die.classList.add('pop');
-            setTimeout(() => die.classList.remove('pop'), 300);
-        }, dur);
-
-        setTimeout(() => {
-            document.getElementById('diceModal').style.display = 'none';
-        }, 2200);
-    });
-
-    socket.on('trigger_image_quiz', (data) => {
-        let qData = customCellQuestions[data.position];
-        if (myPlayer && myPlayer.id === data.playerId) {
-            document.getElementById('quizQuestionText').textContent = qData ? qData.question : `请完成第 ${data.position} 号格子的实操任务并拍照上传！(Complete task & upload photo)`;
-            let mediaBox = document.getElementById('quizMediaContainer');
-            mediaBox.innerHTML = qData && qData.mediaUrl ? `<img src="${qData.mediaUrl}" style="max-width:100%; max-height:180px; border-radius:6px;">` : '';
+            const steps = Math.floor(Math.random() * 6) + 1;
+            anim.style.display = 'none';
+            text.innerText = `🎲 掷出了 ${steps} 点！`;
             
-            document.getElementById('studentQuizModal').style.display = 'flex';
-            
-            let timeLeft = 300;
-            document.getElementById('timerCountdown').textContent = timeLeft;
-            if(quizTimer) clearInterval(quizTimer);
-            quizTimer = setInterval(() => {
-                timeLeft--;
-                document.getElementById('timerCountdown').textContent = timeLeft;
-                if(timeLeft <= 0) {
-                    clearInterval(quizTimer);
-                    document.getElementById('studentQuizModal').style.display = 'none';
-                    alert("⏰ 5分钟反应时间已到，未及时上传！判定不通过，原地待命。\nTime's up! Failed to upload.");
-                    socket.emit('student_submit_image', { passed: false, position: data.position });
-                }
+            // 移动步数 (总共18格，取模循环)
+            currentPos = (currentPos + steps) % 18;
+            document.getElementById('location-name').innerText = `${currentPos}. ${board[currentPos].name}`;
+            updateBoardHighlight();
+
+            setTimeout(() => {
+                handleCellEvent(board[currentPos]);
+                btn.disabled = false;
             }, 1000);
-        }
-    });
+        }, 800);
+    }
 
-    function studentSubmitImage(event) {
-        let file = event.target.files[0];
-        if(file) {
-            let reader = new FileReader();
-            reader.onload = function(e) {
-                clearInterval(quizTimer);
-                document.getElementById('studentQuizModal').style.display = 'none';
-                socket.emit('upload_homework_image', { image: e.target.result, playerName: myPlayer.name });
-            };
-            reader.readAsDataURL(file);
+    function handleCellEvent(cell) {
+        document.getElementById('dice-screen').classList.add('hidden');
+
+        if (cell.type === 'q') {
+            // 题目录入格：随机抽取一道题
+            setupQuestion();
+        } else {
+            // 功能格 (7个中的其他类型)
+            setupSpecialCell(cell);
         }
     }
 
-    socket.on('teacher_review_homework', (data) => {
-        document.getElementById('gradingPlayerInfo').textContent = `学生 (Student): ${data.playerName} 提交了实操作业，请打分：\nSubmitted practical work, please grade:`;
-        document.getElementById('gradingStudentImg').src = data.image;
-        document.getElementById('teacherGradingModal').style.display = 'flex';
-    });
+    function setupQuestion() {
+        document.getElementById('question-screen').classList.remove('hidden');
+        document.getElementById('feedback').style.display = 'none';
+        document.getElementById('next-btn').classList.add('hidden');
+        
+        const badge = document.getElementById('event-badge');
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
 
-    function gradeResult(isPassed) {
-        document.getElementById('teacherGradingModal').style.display = 'none';
-        socket.emit('teacher_grade_decision', { passed: isPassed });
+        // 随机取题
+        currentQuestion = questionDb[Math.floor(Math.random() * questionDb.length)];
+
+        if (currentQuestion.type === 'grammar') {
+            badge.className = 'event-type-badge type-grammar';
+            badge.innerText = '📘 题目录入格 - 语法站';
+        } else {
+            badge.className = 'event-type-badge type-dialog';
+            badge.innerText = '💬 题目录入格 - 交际角';
+        }
+
+        document.getElementById('q-hanzi').innerText = currentQuestion.Q;
+
+        currentQuestion.Opts.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = 'btn btn-option';
+            btn.innerText = opt;
+            const letter = opt.charAt(0);
+            btn.onclick = () => checkAnswer(letter, btn);
+            container.appendChild(btn);
+        });
     }
 
-    socket.on('log_message', (msg) => {
-        let list = document.getElementById('historyList');
-        let item = document.createElement('div');
-        item.textContent = msg;
-        list.prepend(item);
-    });
+    function checkAnswer(selection, btnElement) {
+        document.querySelectorAll('.btn-option').forEach(b => b.disabled = true);
+        const feedback = document.getElementById('feedback');
+        feedback.style.display = 'block';
+        document.getElementById('next-btn').classList.remove('hidden');
 
-    window.onload = function() { 
-        initLargeDice(); 
-        generateBoardCells(); // 提前生成格子以确保后台下拉菜单正常
-    };
-    window.onresize = function() { updateMapScale(); };
+        if (selection === currentQuestion.Ans) {
+            gold += 200;
+            feedback.className = 'feedback-area correct';
+            feedback.innerHTML = `<strong>✅ 回答正确！(Correct!)</strong><br>太棒了！奖励 200 金币。`;
+            btnElement.style.background = '#d4edda';
+        } else {
+            gold -= 100;
+            if (gold < 0) gold = 0;
+            feedback.className = 'feedback-area incorrect';
+            feedback.innerHTML = `<strong>❌ 回答错误。(Incorrect)</strong><br>正确答案是: ${currentQuestion.Ans}<br>扣除 100 金币。`;
+            btnElement.style.background = '#f8d7da';
+        }
+        updateGold();
+    }
+
+    function setupSpecialCell(cell) {
+        document.getElementById('special-screen').classList.remove('hidden');
+        const badge = document.getElementById('special-badge');
+        const msg = document.getElementById('special-msg');
+
+        if (cell.type === 'go') {
+            badge.className = 'event-type-badge type-grammar';
+            badge.innerText = '🚀 起点格 (GO)';
+            msg.innerText = "经过起点，获得额外补给！\n(+300 金币)";
+            gold += 300;
+        } else if (cell.type === 'reward') {
+            badge.className = 'event-type-badge type-reward';
+            badge.innerText = '🎁 奖励格 (Reward)';
+            msg.innerText = "运气真好！获得中文学习奖励积分。\n(+200 金币)";
+            gold += 200;
+        } else if (cell.type === 'punish') {
+            badge.className = 'event-type-badge type-punish';
+            badge.innerText = '⚡ 惩罚格 (Punish)';
+            msg.innerText = "遭遇小考验，扣除部分积分。\n(-150 金币)";
+            gold -= 150;
+            if (gold < 0) gold = 0;
+        } else if (cell.type === 'stop') {
+            badge.className = 'event-type-badge type-stop';
+            badge.innerText = '🛑 暂停格 (Stop)';
+            msg.innerText = "稍作休息，本回合暂停一次答题。";
+        } else if (cell.type === 'chance') {
+            badge.className = 'event-type-badge type-chance';
+            badge.innerText = '🎲 机会格 (Chance)';
+            msg.innerText = "获得一次额外掷骰子的好运！\n(+100 金币)";
+            gold += 100;
+        }
+        updateGold();
+    }
+
+    function updateGold() {
+        document.getElementById('gold-display').innerText = gold;
+    }
+
+    function returnToDice() {
+        document.getElementById('question-screen').classList.add('hidden');
+        document.getElementById('special-screen').classList.add('hidden');
+        document.getElementById('dice-screen').classList.remove('hidden');
+        document.getElementById('move-text').innerText = "轮到你了，点击按钮掷骰子！";
+    }
 </script>
 </body>
 </html>
