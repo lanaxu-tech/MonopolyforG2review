@@ -84,8 +84,6 @@
         .cell.punish { background: #fce4ec; border-color: #f48fb1; color: #c2185b; }
         .cell.chance { background: #ede7f6; border-color: #b39ddb; color: #512da8; }
         .cell.normal { background: #f8fafc; border-color: #cbd5e1; color: #334155; }
-        
-        /* 已绑定题目的普通格子动态高亮边框与小标记 */
         .cell.bound { border: 2px dashed #2563eb; background: #eff6ff; }
 
         .board-center-banner {
@@ -177,19 +175,19 @@
         .form-group input, .form-group select, .form-group textarea {
             width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem;
         }
-        .quiz-modal, .grading-modal {
+        .quiz-modal, .grading-modal, .func-alert-modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 3000; color: #333;
         }
         .quiz-card {
-            background: #fff; width: 90%; max-width: 550px; padding: 30px; border-radius: 16px; text-align: center;
+            background: #fff; width: 90%; max-width: 500px; padding: 30px; border-radius: 16px; text-align: center;
             box-shadow: 0 15px 40px rgba(0,0,0,0.4);
         }
     </style>
 </head>
 <body>
 
-<!-- 学生登录与命名遮罩层 (同时集成教师端入口) -->
+<!-- 学生登录与命名遮罩层 -->
 <div class="login-overlay" id="loginOverlay">
     <div class="login-card">
         <h2>🎮 加入大富翁联机课堂<br><span style="font-size:0.8rem; color:#666;">Join Multiplayer Classroom</span></h2>
@@ -257,12 +255,21 @@
     </div>
 </div>
 
-<!-- 教师端录入管理弹窗（带 1020# 密码保护，下拉菜单备注已绑定状态） -->
+<!-- 功能格纯说明弹窗 (无需学生做题) -->
+<div class="func-alert-modal" id="funcAlertModal">
+    <div class="quiz-card">
+        <h2 id="funcAlertTitle" style="color: #ff4b2b; margin-bottom: 15px;"></h2>
+        <p id="funcAlertDesc" style="font-size: 1.1rem; color: #475569; margin-bottom: 25px; line-height: 1.5;"></p>
+        <button class="roll-btn" onclick="closeFuncAlert()" style="padding: 10px 30px; font-size: 1rem;">确定 (OK)</button>
+    </div>
+</div>
+
+<!-- 教师端录入管理弹窗 -->
 <div class="modal-overlay" id="teacherModal">
     <div class="modal-card">
         <span class="modal-close" onclick="closeTeacherModal()">&times;</span>
         <div class="modal-title"><i class="fas fa-upload"></i> 教师端题库录入系统 <span style="font-size:0.8rem; color:#666;">(Teacher Console)</span></div>
-        <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 12px;">为棋盘中的 11 个题目录入格绑定定制练习（已自动排除功能格，下拉菜单中将显示已绑定备注）。</p>
+        <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 12px;">为棋盘中的 11 个题目录入格绑定定制练习（功能格已自动排除）。</p>
         
         <form id="teacherForm" onsubmit="saveTeacherQuestion(event)">
             <div class="form-group">
@@ -348,7 +355,7 @@
     const socket = io(SOCKET_SERVER_URL);
 
     let myPlayer = null;
-    let customCellQuestions = {}; // 存储格子绑定的题目
+    let customCellQuestions = {};
     let uploadedMediaData = null;
     let uploadedAudioData = null;
     let quizTimer = null;
@@ -387,7 +394,6 @@
         generateBoardCells();
     }
 
-    // 生成 18 宫格棋盘（已绑定题目的格子会带有 bound 样式和“已绑定”提示）
     function generateBoardCells() {
         const mapContainer = document.getElementById('mapContainer');
         mapContainer.querySelectorAll('.cell').forEach(c => c.remove());
@@ -408,7 +414,7 @@
 
         // 7个功能性格子配置
         let specialTypes = {
-            0: 'go',        /* cell 0: GO ➡️ 起点 */
+            0: 'go',        /* cell 0: GO ➡️ */
             2: 'reward',    /* 奖励积分 */
             4: 'stop',      /* 暂停 */
             7: 'punish',    /* 后退1步 */
@@ -423,8 +429,6 @@
         for(let i = 0; i < 18; i++) {
             let c = uniqueCoords[i] || { index: i, left: 20, top: 18 };
             let cellType = specialTypes[i] || 'normal';
-            
-            // 检查该普通格是否已经绑定了题目
             let isBound = (customCellQuestions[i] != null);
             let classNames = `cell ${cellType} ${isBound ? 'bound' : ''}`;
 
@@ -454,7 +458,6 @@
             } else if(cellType === 'chance') {
                 labelSpan.innerHTML = 'CHANCE 🎲<br><span style="font-size:0.45rem">再扔一次 Roll</span>';
             } else {
-                // 普通题目录入格：如果已绑定，显示“已绑定(Bound)”备注
                 if (isBound) {
                     labelSpan.innerHTML = `格子 ${i}<br><span style="color:#2563eb; font-weight:bold; font-size:0.5rem;">✅ 已绑定(Bound)</span>`;
                 } else {
@@ -476,19 +479,16 @@
         updateMapScale();
     }
 
-    // 辅助函数：填充教师端下拉菜单，并对已绑定题目的格子在备注中明确显示
     function populateTeacherCellSelect() {
         let select = document.getElementById('tCellIndex');
         if (!select) return;
         select.innerHTML = '';
         
-        let functionalCells = [0, 2, 4, 7, 10, 13, 16]; // 功能格已排除
+        let functionalCells = [0, 2, 4, 7, 10, 13, 16];
         for (let i = 0; i < 18; i++) {
             if (!functionalCells.includes(i)) {
                 let opt = document.createElement('option');
                 opt.value = i;
-                
-                // 检查该格子是否已经绑定了题目，并在备注中显示
                 let hasQuestion = (customCellQuestions[i] != null);
                 if (hasQuestion) {
                     opt.textContent = `第 ${i} 号题目录入格 (Cell ${i}) — [✅ 已绑定题目 / Bound]`;
@@ -518,7 +518,7 @@
         let pwd = prompt("请输入教师管理密码 (Enter Teacher Password):");
         if (pwd === "1020#") {
             document.getElementById('teacherModal').style.display = 'flex';
-            populateTeacherCellSelect(); // 每次打开时刷新下拉菜单中的绑定状态备注
+            populateTeacherCellSelect();
         } else if (pwd !== null) {
             alert("密码错误！Password incorrect!");
         }
@@ -577,7 +577,7 @@
         document.getElementById('audioPreviewText').textContent = '未选择任何音频 / No audio chosen';
         
         closeTeacherModal();
-        generateBoardCells(); // 重新生成棋盘以实时刷新格子上的“已绑定”显示
+        generateBoardCells();
     }
 
     socket.on('init_player', (player) => { myPlayer = player; });
@@ -661,10 +661,21 @@
         }, 2200);
     });
 
+    // 触发题目/图片/听力任务
     socket.on('trigger_quiz_task', (data) => {
-        let qData = customCellQuestions[data.position];
+        let pos = data.position;
+        // 如果是 7 个功能格之一，直接弹出功能纯说明提示弹窗，无需学生做题
+        if ([0, 2, 4, 7, 10, 13, 16].includes(pos)) {
+            if (myPlayer && myPlayer.id === data.playerId) {
+                showFunctionAlert(pos);
+            }
+            return;
+        }
+
+        // 普通题目录入格：弹出做题/拍照上传窗口
+        let qData = customCellQuestions[pos];
         if (myPlayer && myPlayer.id === data.playerId) {
-            document.getElementById('quizQuestionText').textContent = qData ? qData.question : `请完成第 ${data.position} 号格子的实操任务并拍照上传！(Complete task & upload photo)`;
+            document.getElementById('quizQuestionText').textContent = qData ? qData.question : `请完成第 ${pos} 号格子的实操任务并拍照上传！(Complete task & upload photo)`;
             
             let mediaBox = document.getElementById('quizMediaContainer');
             mediaBox.innerHTML = qData && qData.mediaUrl ? `<img src="${qData.mediaUrl}" style="max-width:100%; max-height:160px; border-radius:6px;">` : '';
@@ -689,11 +700,40 @@
                     clearInterval(quizTimer);
                     document.getElementById('studentQuizModal').style.display = 'none';
                     alert("⏰ 5分钟反应时间已到，未及时上传！判定不通过，原地待命。\nTime's up! Failed to upload.");
-                    socket.emit('student_submit_image', { passed: false, position: data.position });
+                    socket.emit('student_submit_image', { passed: false, position: pos });
                 }
             }, 1000);
         }
     });
+
+    // 显示功能格纯说明提示弹窗
+    function showFunctionAlert(pos) {
+        let titleEl = document.getElementById('funcAlertTitle');
+        let descEl = document.getElementById('funcAlertDesc');
+        
+        if (pos === 0) {
+            titleEl.innerHTML = "🚀 GO (起点)";
+            descEl.innerHTML = "回到起点 / Return to start";
+        } else if (pos === 2 || pos === 10) {
+            titleEl.innerHTML = "🎁 REWARD (奖励格)";
+            descEl.innerHTML = "恭喜获得随机积分奖励！<br><span style='font-size:0.9rem; color:#64748b;'>Random reward points!</span>";
+        } else if (pos === 4) {
+            titleEl.innerHTML = "🛑 STOP (暂停格)";
+            descEl.innerHTML = "触发暂停，本回合停止前进。<br><span style='font-size:0.9rem; color:#64748b;'>Stop for one turn.</span>";
+        } else if (pos === 7 || pos === 16) {
+            titleEl.innerHTML = "⚡ PUNISH (惩罚格)";
+            descEl.innerHTML = "触发惩罚，需后退 1 步。<br><span style='font-size:0.9rem; color:#64748b;'>Back one step.</span>";
+        } else if (pos === 13) {
+            titleEl.innerHTML = "🎲 CHANCE (机会格)";
+            descEl.innerHTML = "获得好运，可以再扔一次骰子！<br><span style='font-size:0.9rem; color:#64748b;'>Roll again!</span>";
+        }
+        
+        document.getElementById('funcAlertModal').style.display = 'flex';
+    }
+
+    function closeFuncAlert() {
+        document.getElementById('funcAlertModal').style.display = 'none';
+    }
 
     function studentSubmitImage(event) {
         let file = event.target.files[0];
