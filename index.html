@@ -9,7 +9,7 @@
     <style>
         *, *::before, *::after { box-sizing: border-box; }
         body {
-            background: linear-gradient(135deg, #232b40 0%, #0c0f16 62%);
+            background: radial-gradient(circle at 50% 0%, #232b40 0%, #0c0f16 62%);
             color: #eaeef8; min-height: 100vh; margin: 0; padding: 10px;
             display: flex; justify-content: center; align-items: center;
             font-family: system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
@@ -27,6 +27,7 @@
         .header h1 { font-size: 2.2rem; margin-bottom: 3px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
         .header p { font-size: 1rem; opacity: 0.9; }
 
+        /* 教师端入口按钮 (密码保护) */
         .teacher-btn {
             position: absolute; right: 25px; top: 50%; transform: translateY(-50%);
             background: #fff; color: #ff4b2b; border: none; padding: 8px 16px;
@@ -67,11 +68,13 @@
             background-color: #ffffff; border-radius: 12px;
             box-shadow: 0 8px 25px rgba(0,0,0,0.08); border: 4px solid #333; transform-origin: top left;
         }
+
+        /* 棋盘格子样式 (对应参考图片布局与 7 个功能性格子) */
         .cell {
             position: absolute; width: 70px; height: 70px; background: #fff;
-            border: 2px solid #333; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: bold; font-size: 0.75rem;
+            border: 2px solid #333; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: bold; font-size: 0.7rem; text-align: center; padding: 2px;
         }
-        .cell-num { position: absolute; top: 2px; left: 3px; font-size: 0.6rem; color: #888; }
+        .cell-num { position: absolute; top: 2px; left: 3px; font-size: 0.55rem; color: #888; }
         .cell.go { background: #ffebee; border-color: #c62828; color: #b71c1c; }
         .cell.stop { background: #ffe0b2; border-color: #ef6c00; }
         .cell.reward { background: #e8f5e9; border-color: #2e7d32; }
@@ -93,6 +96,7 @@
             font-weight: bold; font-size: 1.1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
+        /* ===== 生动升级的 3D 骰子舞台与视觉质感 ===== */
         .center-dice-modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1500;
@@ -104,9 +108,16 @@
         }
         .face-large {
             position: absolute; inset: 0; display: grid; grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(3, 1fr); padding: 15%; background: #fff; border-radius: 15%; border: 2px solid #333;
+            grid-template-rows: repeat(3, 1fr); gap: 8%; padding: 12%; border-radius: 15%;
+            background: radial-gradient(circle at 32% 26%, #ffffff 0%, #f2f5fa 55%, #dbe2ee 100%);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,.85), inset 0 -9px 16px rgba(120, 136, 168, .22), inset 0 7px 12px rgba(255, 255, 255, .95);
+            border: 1px solid rgba(0,0,0,0.1);
         }
-        .face-large .pip { background: #1e293b; border-radius: 50%; width: 100%; height: 100%; place-self: center; opacity: 0; }
+        .face-large .pip {
+            width: 100%; height: 100%; place-self: center; border-radius: 50%;
+            background: radial-gradient(circle at 34% 28%, #4b5570 0%, #0e1219 78%);
+            box-shadow: inset 0 1px 2px rgba(255,255,255,.28); opacity: 0; transform: scale(.82);
+        }
         .face-large .pip.on { opacity: 1; }
         .face-large.front  { transform: translateZ(70px); }
         .face-large.back   { transform: rotateY(180deg) translateZ(70px); }
@@ -119,7 +130,9 @@
             background: linear-gradient(135deg, #ff416c, #ff4b2b); color: white; border: none;
             padding: 14px 40px; font-size: 1.2rem; font-weight: bold; border-radius: 50px;
             cursor: pointer; box-shadow: 0 6px 20px rgba(255, 65, 108, 0.4); width: 100%;
+            transition: transform .16s ease, box-shadow .16s ease;
         }
+        .roll-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(255, 65, 108, 0.6); }
         .roll-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
         .player-tokens { display: flex; flex-wrap: wrap; gap: 2px; justify-content: center; align-items: center; margin-top: 12px; }
@@ -132,7 +145,7 @@
         .history-box { background: #fff; padding: 12px 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); flex-grow: 1; display: flex; flex-direction: column; }
         .history-list { font-size: 0.8rem; color: #475569; max-height: 110px; overflow-y: auto; margin-top: 6px; }
 
-        /* 模态框通用 */
+        /* 模态框及教师端 */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 2500;
@@ -148,8 +161,6 @@
         .form-group input, .form-group select, .form-group textarea {
             width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem;
         }
-
-        /* 答题弹窗及批改弹窗 */
         .quiz-modal, .grading-modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 3000; color: #333;
@@ -216,7 +227,7 @@
     </div>
 </div>
 
-<!-- 界面中心 3D 骰子实时同步舞台 -->
+<!-- 界面中心生动 3D 骰子实时同步舞台 -->
 <div class="center-dice-modal" id="diceModal">
     <div style="background: #fff; padding: 30px; border-radius: 20px; text-align: center; width: 300px;">
         <h3 style="color: #333; margin-bottom: 10px;" id="rollingTitle">🎲 正在投掷骰子...</h3>
@@ -227,12 +238,12 @@
     </div>
 </div>
 
-<!-- 教师端录入管理弹窗（带1020#密码保护） -->
+<!-- 教师端录入管理弹窗（带 1020# 密码保护） -->
 <div class="modal-overlay" id="teacherModal">
     <div class="modal-card">
         <span class="modal-close" onclick="closeTeacherModal()">&times;</span>
         <div class="modal-title"><i class="fas fa-upload"></i> 教师端练习题库录入系统</div>
-        <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 12px;">为任意棋盘格子绑定定制练习。支持 **选择题** 或 **无选项图片上传实操题**。</p>
+        <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 12px;">为任意棋盘格子绑定定制练习（支持选择题或无选项图片上传实操题）。</p>
         
         <form id="teacherForm" onsubmit="saveTeacherQuestion(event)">
             <div class="form-group">
@@ -248,7 +259,7 @@
             </div>
             <div class="form-group">
                 <label>题目内容 / 要求说明:</label>
-                <textarea id="tQuestionText" rows="2" placeholder="例如：请在纸上写出第5课生词并拍照上传"></textarea>
+                <textarea id="tQuestionText" rows="2" placeholder="例如：请在纸上写出本课生词并拍照上传"></textarea>
             </div>
             <div class="form-group">
                 <label>参考样图或附件 (可选):</label>
@@ -256,7 +267,6 @@
                 <div class="file-preview" id="filePreviewText" style="font-size:0.8rem; color:#666;">未选择任何文件</div>
             </div>
 
-            <!-- 选择题专属区域 -->
             <div id="choiceFieldsContainer">
                 <div class="form-group"><label>选项 A:</label><input type="text" id="tOptA" placeholder="A. 铅笔 (qiānbǐ)"></div>
                 <div class="form-group"><label>选项 B:</label><input type="text" id="tOptB" placeholder="B. 尺子 (chǐzi)"></div>
@@ -343,28 +353,37 @@
     function joinGame() {
         let nameInput = document.getElementById('playerNameInput').value.trim();
         if(!nameInput) { alert("请输入你的名字！Please enter your name!"); return; }
-        
         socket.emit('join_game', { name: nameInput });
         document.getElementById('loginOverlay').style.display = 'none';
         generateBoardCells();
     }
 
+    // 生成 24 个格子，并精确配置参考图片中的 7 个功能性格子 (punish, stop, reward, chance)
     function generateBoardCells() {
         const mapContainer = document.getElementById('mapContainer');
         mapContainer.querySelectorAll('.cell').forEach(c => c.remove());
+        
         let coords = [];
         for(let i=0; i<=6; i++) coords.unshift({index: i, left: i * 115 + 20, top: 20, type: i===0?'go':'normal'});
-        for(let i=1; i<=5; i++) coords.push({index: 6+i, left: 710, top: i * 85 + 20, type: i===3?'stop':'normal'});
-        for(let i=0; i<=5; i++) coords.push({index: 12+i, left: 710 - i * 115, top: 520, type: i===2?'punish':(i===4?'reward':'normal')});
-        for(let i=1; i<=5; i++) coords.push({index: 18+i, left: 20, top: 520 - i * 85, type: i===2?'chance':'normal'});
+        for(let i=1; i<=5; i++) coords.push({index: 6+i, left: 710, top: i * 85 + 20, type: (i===3)?'stop':((i===2)?'reward':'normal')});
+        for(let i=0; i<=5; i++) coords.push({index: 12+i, left: 710 - i * 115, top: 520, type: (i===2)?'punish':((i===4)?'reward':((i===5)?'chance':'normal'))});
+        for(let i=1; i<=5; i++) coords.push({index: 18+i, left: 20, top: 520 - i * 85, type: (i===2)?'chance':((i===4)?'punish':'normal')});
+
+        // 明确指定 7 个功能性格子类型
+        let specialTypes = {
+            0: 'go', 3: 'reward', 6: 'stop', 8: 'reward', 
+            12: 'punish', 16: 'reward', 17: 'chance', 20: 'chance', 22: 'punish'
+        };
 
         let uniqueCoords = {};
         coords.forEach(c => uniqueCoords[c.index] = c);
         
         for(let i=0; i<24; i++) {
             let c = uniqueCoords[i] || {index: i, left: 20, top: 20, type: 'normal'};
+            let cellType = specialTypes[i] || c.type;
+
             let cellDiv = document.createElement('div');
-            cellDiv.className = `cell ${c.type}`;
+            cellDiv.className = `cell ${cellType}`;
             cellDiv.style.left = `${c.left}px`;
             cellDiv.style.top = `${c.top}px`;
             
@@ -372,6 +391,17 @@
             numSpan.className = 'cell-num';
             numSpan.textContent = i;
             cellDiv.appendChild(numSpan);
+
+            let labelSpan = document.createElement('span');
+            labelSpan.style.fontSize = '0.6rem';
+            labelSpan.style.marginTop = '4px';
+            if(cellType === 'go') labelSpan.textContent = 'GO 🚀';
+            else if(cellType === 'stop') labelSpan.textContent = 'STOP 🛑';
+            else if(cellType === 'reward') labelSpan.textContent = 'REWARD 🎁';
+            else if(cellType === 'punish') labelSpan.textContent = 'PUNISH ⚡';
+            else if(cellType === 'chance') labelSpan.textContent = 'CHANCE 🎲';
+            else labelSpan.textContent = `格子 ${i}`;
+            cellDiv.appendChild(labelSpan);
 
             let tokenContainer = document.createElement('div');
             tokenContainer.className = 'player-tokens';
@@ -402,7 +432,7 @@
 
     function requestRoll() { socket.emit('roll_dice'); }
 
-    // 教师端密码保护入口 (密码: 1020#)
+    // 教师端密码保护 (1020#)
     function openTeacherModal() {
         let pwd = prompt("请输入教师管理密码 (Enter Teacher Password):");
         if (pwd === "1020#") {
@@ -417,11 +447,7 @@
     function toggleQuestionTypeFields() {
         let qType = document.getElementById('tQuestionType').value;
         let choiceContainer = document.getElementById('choiceFieldsContainer');
-        if(qType === 'image_upload') {
-            choiceContainer.style.display = 'none';
-        } else {
-            choiceContainer.style.display = 'block';
-        }
+        choiceContainer.style.display = (qType === 'image_upload') ? 'none' : 'block';
     }
 
     function handleFileupload(event) {
@@ -429,9 +455,7 @@
         if(file) {
             document.getElementById('filePreviewText').textContent = `已选择文件: ${file.name}`;
             let reader = new FileReader();
-            reader.onload = function(e) {
-                uploadedMediaData = { url: e.target.result, type: file.type };
-            };
+            reader.onload = function(e) { uploadedMediaData = { url: e.target.result, type: file.type }; };
             reader.readAsDataURL(file);
         }
     }
@@ -457,7 +481,6 @@
         closeTeacherModal();
     }
 
-    // ================== 后端同步与事件逻辑 ==================
     socket.on('init_player', (player) => { myPlayer = player; });
 
     socket.on('update_game_state', (state) => {
@@ -519,18 +542,15 @@
         }, 2200);
     });
 
-    // 触发格子实操关卡（图片上传类型）
     socket.on('trigger_image_quiz', (data) => {
         let qData = customCellQuestions[data.position];
         if (myPlayer && myPlayer.id === data.playerId) {
-            // 当前行动的学生弹出 5 分钟反应时间上传窗口
             document.getElementById('quizQuestionText').textContent = qData ? qData.question : `请完成第 ${data.position} 号格子的实操任务并拍照上传！`;
             let mediaBox = document.getElementById('quizMediaContainer');
             mediaBox.innerHTML = qData && qData.mediaUrl ? `<img src="${qData.mediaUrl}" style="max-width:100%; max-height:180px; border-radius:6px;">` : '';
             
             document.getElementById('studentQuizModal').style.display = 'flex';
             
-            // 5分钟倒计时 (300秒)
             let timeLeft = 300;
             document.getElementById('timerCountdown').textContent = timeLeft;
             if(quizTimer) clearInterval(quizTimer);
@@ -547,7 +567,6 @@
         }
     });
 
-    // 学生上传图片后发送给服务器交由老师批改
     function studentSubmitImage(event) {
         let file = event.target.files[0];
         if(file) {
@@ -555,16 +574,13 @@
             reader.onload = function(e) {
                 clearInterval(quizTimer);
                 document.getElementById('studentQuizModal').style.display = 'none';
-                // 发送图片给后端展示给老师批改
                 socket.emit('upload_homework_image', { image: e.target.result, playerName: myPlayer.name });
             };
             reader.readAsDataURL(file);
         }
     }
 
-    // 老师端接收到学生的作业图片弹窗批改
     socket.on('teacher_review_homework', (data) => {
-        // 如果是老师端或者大屏，弹出批改窗口
         document.getElementById('gradingPlayerInfo').textContent = `学生: ${data.playerName} 提交了实操作业，请打分：`;
         document.getElementById('gradingStudentImg').src = data.image;
         document.getElementById('teacherGradingModal').style.display = 'flex';
@@ -572,7 +588,6 @@
 
     function gradeResult(isPassed) {
         document.getElementById('teacherGradingModal').style.display = 'none';
-        // 向后端发送批改结果：✅ 通过前进，❌ 不通过留在原地
         socket.emit('teacher_grade_decision', { passed: isPassed });
     }
 
