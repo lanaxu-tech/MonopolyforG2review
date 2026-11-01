@@ -27,29 +27,29 @@
         .header h1 { font-size: 2.2rem; margin-bottom: 3px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
         .header p { font-size: 1rem; opacity: 0.9; }
 
-        /* 教师端入口按钮 (密码保护 1020#) */
-        .teacher-btn {
-            position: absolute; right: 25px; top: 50%; transform: translateY(-50%);
-            background: #fff; color: #ff4b2b; border: none; padding: 8px 16px;
-            font-weight: bold; border-radius: 30px; cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.15); transition: all 0.2s;
-        }
-        .teacher-btn:hover { background: #fff3cd; transform: translateY(-53%); }
-
+        /* 初始登录遮罩层 */
         .login-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(12, 15, 22, 0.9); display: flex;
             justify-content: center; align-items: center; z-index: 2000;
         }
         .login-card {
-            background: #fff; padding: 30px; border-radius: 15px; width: 90%; max-width: 400px;
-            text-align: center; color: #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            background: #fff; padding: 30px; border-radius: 15px; width: 90%; max-width: 420px;
+            text-align: center; color: #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative;
         }
         .login-card h2 { margin-bottom: 15px; color: #ff4b2b; }
         .login-card input {
             width: 100%; padding: 12px; font-size: 1.1rem; border: 2px solid #cbd5e1;
             border-radius: 8px; margin-bottom: 15px; text-align: center;
         }
+
+        /* 初始界面的教师端入口按钮 */
+        .initial-teacher-btn {
+            background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 8px 16px;
+            font-size: 0.9rem; font-weight: bold; border-radius: 30px; cursor: pointer;
+            margin-top: 10px; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;
+        }
+        .initial-teacher-btn:hover { background: #e2e8f0; color: #1e293b; }
 
         .game-content { display: flex; flex-wrap: wrap; }
         .game-board-pane {
@@ -69,7 +69,7 @@
             box-shadow: 0 8px 25px rgba(0,0,0,0.08); border: 4px solid #333; transform-origin: top left;
         }
 
-        /* 棋盘格子美化：增大尺寸、缩小间距、采用低饱和度功能色 */
+        /* 棋盘格子外观与排版优化 */
         .cell {
             position: absolute; width: 78px; height: 78px; background: #ffffff;
             border: 2px solid #333; border-radius: 8px;
@@ -80,7 +80,7 @@
         .cell:hover { transform: scale(1.03); z-index: 10; }
         .cell-num { position: absolute; top: 2px; left: 4px; font-size: 0.55rem; color: #666; font-weight: bold; }
         
-        /* 低饱和度功能色样式 */
+        /* 低饱和度功能色彩 */
         .cell.go { background: #ffebee; border-color: #e57373; color: #c62828; }
         .cell.stop { background: #fff3e0; border-color: #ffb74d; color: #e65100; }
         .cell.reward { background: #e8f5e9; border-color: #81c784; color: #2e7d32; }
@@ -189,13 +189,18 @@
 </head>
 <body>
 
-<!-- 学生登录与命名遮罩层 -->
+<!-- 学生登录与命名遮罩层 (同时集成教师端入口) -->
 <div class="login-overlay" id="loginOverlay">
     <div class="login-card">
         <h2>🎮 加入大富翁联机课堂<br><span style="font-size:0.8rem; color:#666;">Join Multiplayer Classroom</span></h2>
         <p style="font-size: 0.9rem; color: #666; margin-bottom: 15px;">请输入你的名字加入游戏，系统将为你自动分配专属角色！<br>Enter your name to join:</p>
         <input type="text" id="playerNameInput" placeholder="例如：Fatima / 玛丽亚" maxlength="15">
         <button class="roll-btn" onclick="joinGame()">进入游戏 (Join Game)</button>
+        
+        <!-- 教师端入口按钮移至初始加入界面，带有 1020# 密码保护 -->
+        <button class="initial-teacher-btn" onclick="openTeacherModal()">
+            <i class="fas fa-cog"></i> 教师端题库录入 (Teacher Console)
+        </button>
     </div>
 </div>
 
@@ -203,7 +208,6 @@
     <div class="header">
         <h1>🎲 中文互动大富翁 - 多人实时联机课堂</h1>
         <p>Real-time Multiplayer Classroom Edition</p>
-        <button class="teacher-btn" onclick="openTeacherModal()"><i class="fas fa-cog"></i> 教师端题库录入 (Teacher Console)</button>
     </div>
 
     <div class="turn-announcement" id="turnAnnouncement">
@@ -374,22 +378,26 @@
         generateBoardCells();
     }
 
-    // 生成 24 个格子：横排间距更紧凑，格子更大，cell 0 设为 GO➡️
+    // 严丝合缝的 24 格环形坐标与不重叠布局算法
     function generateBoardCells() {
         const mapContainer = document.getElementById('mapContainer');
         mapContainer.querySelectorAll('.cell').forEach(c => c.remove());
         
         let coords = [];
-        // 顶部横排 (0~6) 间距调整为 105px
-        for(let i=0; i<=6; i++) coords.unshift({index: i, left: i * 108 + 22, top: 18, type: i===0?'go':'normal'});
-        // 右侧竖排 (7~11)
-        for(let i=1; i<=5; i++) coords.push({index: 6+i, left: 740, top: i * 95 + 18, type: 'normal'});
-        // 底部横排 (12~17) 间距调整为 105px
-        for(let i=0; i<=5; i++) coords.push({index: 12+i, left: 740 - i * 108, top: 520, type: 'normal'});
-        // 左侧竖排 (18~23)
-        for(let i=1; i<=5; i++) coords.push({index: 18+i, left: 22, top: 520 - i * 95, type: 'normal'});
+        for(let i = 0; i <= 6; i++) {
+            coords.push({ index: i, left: i * 110 + 18, top: 18 });
+        }
+        for(let i = 1; i <= 5; i++) {
+            coords.push({ index: 6 + i, left: 742, top: i * 98 + 18 });
+        }
+        for(let i = 0; i <= 5; i++) {
+            coords.push({ index: 12 + i, left: 742 - i * 110, top: 522 });
+        }
+        for(let i = 1; i <= 6; i++) {
+            coords.push({ index: 18 + i - 1, left: 18, top: 522 - i * 98 });
+        }
 
-        // 7个功能性格子精确定位配置 (punish:后退1步, stop:暂停, reward:奖励随机积分, chance:再扔一次)
+        // 7个功能性格子精确定位配置
         let specialTypes = {
             0: 'go',        /* cell 0 设为 GO ➡️ */
             3: 'reward',    /* 奖励积分 (Random Reward) */
@@ -403,9 +411,9 @@
         let uniqueCoords = {};
         coords.forEach(c => uniqueCoords[c.index] = c);
         
-        for(let i=0; i<24; i++) {
-            let c = uniqueCoords[i] || {index: i, left: 22, top: 18, type: 'normal'};
-            let cellType = specialTypes[i] || c.type;
+        for(let i = 0; i < 24; i++) {
+            let c = uniqueCoords[i] || { index: i, left: 18, top: 18 };
+            let cellType = specialTypes[i] || 'normal';
 
             let cellDiv = document.createElement('div');
             cellDiv.className = `cell ${cellType}`;
@@ -439,12 +447,15 @@
             mapContainer.appendChild(cellDiv);
         }
 
+        // 初始化教师端格子下拉选项
         let select = document.getElementById('tCellIndex');
-        select.innerHTML = '';
-        for(let i=0; i<24; i++) {
-            let opt = document.createElement('option');
-            opt.value = i; opt.textContent = `第 ${i} 号格子 (Cell ${i})`;
-            select.appendChild(opt);
+        if (select) {
+            select.innerHTML = '';
+            for(let i=0; i<24; i++) {
+                let opt = document.createElement('option');
+                opt.value = i; opt.textContent = `第 ${i} 号格子 (Cell ${i})`;
+                select.appendChild(opt);
+            }
         }
         updateMapScale();
     }
@@ -465,6 +476,15 @@
         let pwd = prompt("请输入教师管理密码 (Enter Teacher Password):");
         if (pwd === "1020#") {
             document.getElementById('teacherModal').style.display = 'flex';
+            // 确保打开弹窗时下拉菜单已初始化
+            let select = document.getElementById('tCellIndex');
+            if (select && select.options.length === 0) {
+                for(let i=0; i<24; i++) {
+                    let opt = document.createElement('option');
+                    opt.value = i; opt.textContent = `第 ${i} 号格子 (Cell ${i})`;
+                    select.appendChild(opt);
+                }
+            }
         } else if (pwd !== null) {
             alert("密码错误！Password incorrect!");
         }
@@ -646,7 +666,10 @@
         list.prepend(item);
     });
 
-    window.onload = function() { initLargeDice(); };
+    window.onload = function() { 
+        initLargeDice(); 
+        generateBoardCells(); // 提前生成格子以确保后台下拉菜单正常
+    };
     window.onresize = function() { updateMapScale(); };
 </script>
 </body>
