@@ -3,57 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>中文互动大富翁游戏 - 多人版 (支持10人上限)</title>
+    <title>中文互动大富翁游戏 - 课堂多人版 (上限10人)</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
-        }
+        *, *::before, *::after { box-sizing: border-box; }
         body {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            color: #333;
+            background: linear-gradient(135deg, #232b40 0%, #0c0f16 62%);
+            color: #eaeef8;
             min-height: 100vh;
+            margin: 0;
             padding: 15px;
             display: flex;
             justify-content: center;
             align-items: center;
+            font-family: system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            user-select: none;
         }
         .game-container {
             width: 100%;
             max-width: 1450px;
-            background-color: rgba(255, 255, 255, 0.98);
+            background: rgba(255, 255, 255, 0.95);
+            color: #333;
             border-radius: 20px;
-            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.25);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
             overflow: hidden;
             display: flex;
             flex-direction: column;
         }
         .header {
-            background: linear-gradient(to right, #ff9966, #ff5e62);
+            background: linear-gradient(to right, #ff416c, #ff4b2b);
             color: white;
             padding: 20px;
             text-align: center;
             position: relative;
         }
-        .header h1 {
-            font-size: 2.8rem;
-            margin-bottom: 5px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
-        }
-        .header p {
-            font-size: 1.1rem;
-            opacity: 0.95;
-        }
+        .header h1 { font-size: 2.5rem; margin-bottom: 5px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        .header p { font-size: 1.1rem; opacity: 0.9; }
         .teacher-btn {
             position: absolute;
             right: 25px;
             top: 50%;
             transform: translateY(-50%);
             background: #fff;
-            color: #ff5e62;
+            color: #ff4b2b;
             border: none;
             padding: 10px 20px;
             font-weight: bold;
@@ -71,10 +63,10 @@
         }
         .game-board-pane {
             flex: 3;
-            min-width: 550px;
+            min-width: 580px;
             padding: 20px;
-            background-color: #f7f9fc;
-            border-right: 2px dashed #e2e8f0;
+            background-color: #f0f4f8;
+            border-right: 2px dashed #ddd;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -87,11 +79,11 @@
             display: flex;
             flex-direction: column;
             gap: 15px;
-            max-height: 800px;
+            max-height: 820px;
             overflow-y: auto;
         }
 
-        /* 大富翁地图外框：仿照PPT第一页布局 */
+        /* 仿照 PPT 第一页的四周环绕棋盘地图 */
         .map-container {
             width: 840px;
             height: 620px;
@@ -103,7 +95,6 @@
             margin: 10px auto;
         }
 
-        /* 内部棋盘格绝对定位 (共24格四周环绕) */
         .cell {
             position: absolute;
             width: 70px;
@@ -120,9 +111,8 @@
             padding: 4px;
             cursor: pointer;
             transition: all 0.2s;
-            user-select: none;
         }
-        .cell:hover { transform: scale(1.05); z-index: 50; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .cell:hover { transform: scale(1.08); z-index: 50; box-shadow: 0 4px 15px rgba(0,0,0,0.25); }
         .cell-num {
             position: absolute;
             top: 2px;
@@ -130,7 +120,7 @@
             font-size: 0.6rem;
             color: #888;
         }
-        /* 特殊格子颜色与无汉字图标设计 */
+        /* 属性格子颜色 (无汉字标签) */
         .cell.go { background: #ffebee; border-color: #c62828; color: #b71c1c; font-size: 1.1rem; }
         .cell.stop { background: #ffe0b2; border-color: #ef6c00; }
         .cell.reward { background: #e8f5e9; border-color: #2e7d32; }
@@ -166,12 +156,9 @@
             margin-top: 10px;
             animation: bounce 2s infinite;
         }
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 
-        /* 玩家棋子标记 */
+        /* 玩家棋子在格子中的堆叠容器 */
         .player-tokens {
             display: flex;
             flex-wrap: wrap;
@@ -181,22 +168,23 @@
             max-width: 100%;
             max-height: 100%;
             overflow: hidden;
+            margin-top: 12px;
         }
         .token {
-            width: 20px;
-            height: 20px;
+            width: 18px;
+            height: 18px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             color: white;
             box-shadow: 0 2px 4px rgba(0,0,0,0.3);
             border: 1px solid #fff;
         }
 
-        /* 控制台与面板 */
-        .control-panel {
+        /* 3D 骰子区域样式 */
+        .dice-section {
             background: #fff;
             padding: 15px;
             border-radius: 12px;
@@ -205,105 +193,94 @@
             align-items: center;
             justify-content: space-between;
         }
-        .dice-box {
-            display: flex;
-            align-items: center;
-            gap: 15px;
+        .dice-stage {
+            width: 60px;
+            height: 60px;
+            perspective: 600px;
         }
-        .dice-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            border-radius: 50px;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(102, 126, 234,.4);
+        .die {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            transform: rotateX(0deg) rotateY(0deg);
+            transition: transform 0.8s cubic-bezier(.2, .7, .22, 1);
+        }
+        .face {
+            position: absolute;
+            inset: 0;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            padding: 15%;
+            background: radial-gradient(circle, #fff 0%, #e2e8f0 100%);
+            border-radius: 12%;
+            border: 1px solid #cbd5e1;
+        }
+        .pip {
+            width: 100%; height: 100%; border-radius: 50%;
+            background: #1e293b; place-self: center; opacity: 0;
+        }
+        .pip.on { opacity: 1; }
+        .face.front  { transform: translateZ(30px); }
+        .face.back   { transform: rotateY(180deg) translateZ(30px); }
+        .face.right  { transform: rotateY(90deg)  translateZ(30px); }
+        .face.left   { transform: rotateY(-90deg) translateZ(30px); }
+        .face.top    { transform: rotateX(90deg)  translateZ(30px); }
+        .face.bottom { transform: rotateX(-90deg) translateZ(30px); }
+
+        .roll-btn {
+            background: linear-gradient(135deg, #7c6cf5, #5646d6);
+            color: white; border: none; padding: 12px 35px;
+            font-size: 1.1rem; font-weight: bold; border-radius: 50px;
+            cursor: pointer; box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4);
             transition: all 0.2s;
         }
-        .dice-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102, 126, 234,.6); }
-        .dice-display {
-            font-size: 2.2rem;
-            width: 55px;
-            height: 55px;
-            background: #f8fafc;
-            border: 2px solid #cbd5e1;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+        .roll-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(108, 92, 231, 0.6); }
+        .roll-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
+        /* 玩家状态栏 (10人上限) */
         .players-status-box {
-            background: #fff;
-            padding: 15px;
-            border-radius: 12px;
+            background: #fff; padding: 15px; border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
         }
-        .players-status-box h3 { margin-bottom: 10px; color: #1e293b; font-size: 1.1rem; display: flex; justify-content: space-between; align-items: center; }
+        .players-status-box h3 {
+            margin-bottom: 10px; color: #1e293b; font-size: 1.1rem;
+            display: flex; justify-content: space-between; align-items: center;
+        }
         .players-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
-            max-height: 180px;
-            overflow-y: auto;
+            display: grid; grid-template-columns: repeat(2, 1fr);
+            gap: 8px; max-height: 200px; overflow-y: auto;
         }
         .player-card {
-            background: #f1f5f9;
-            padding: 8px 10px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            border-left: 4px solid #cbd5e1;
+            background: #f8fafc; padding: 8px 10px; border-radius: 8px;
+            display: flex; align-items: center; gap: 10px; border-left: 4px solid #cbd5e1;
             font-size: 0.9rem;
         }
         .player-card.active { background: #e0f2fe; border-left-color: #0284c7; font-weight: bold; }
 
-        /* 模态弹窗 (教师端 & 题目测验端) */
+        /* 模态弹窗 (测验 & 教师端) */
         .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); display: none;
+            justify-content: center; align-items: center; z-index: 1000;
         }
         .modal-card {
-            background: white;
-            width: 90%;
-            max-width: 650px;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
-            position: relative;
-            max-height: 90vh;
-            overflow-y: auto;
+            background: white; width: 90%; max-width: 650px;
+            border-radius: 15px; padding: 25px; box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+            position: relative; max-height: 90vh; overflow-y: auto; color: #333;
         }
-        .modal-close {
-            position: absolute;
-            top: 15px; right: 20px;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: #666;
-        }
+        .modal-close { position: absolute; top: 15px; right: 20px; font-size: 1.5rem; cursor: pointer; color: #666; }
         .modal-title { font-size: 1.5rem; margin-bottom: 15px; color: #1e293b; border-bottom: 2px solid #eee; padding-bottom: 10px; }
 
-        /* 题目测验样式 */
+        /* 答题选项样式 */
         .quiz-content { font-size: 1.2rem; margin-bottom: 20px; line-height: 1.5; }
         .quiz-media { margin: 15px 0; text-align: center; }
-        .quiz-media img, .quiz-media iframe { max-width: 100%; max-height: 250px; border-radius: 8px; border: 1px solid #ddd; }
+        .quiz-media img { max-width: 100%; max-height: 250px; border-radius: 8px; border: 1px solid #ddd; }
         .options-list { display: flex; flex-direction: column; gap: 10px; }
         .option-item {
-            padding: 12px 15px;
-            background: #f8fafc;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1.05rem;
-            transition: all 0.2s;
+            padding: 12px 15px; background: #f8fafc; border: 2px solid #e2e8f0;
+            border-radius: 8px; cursor: pointer; font-size: 1.05rem; transition: all 0.2s;
         }
         .option-item:hover { background: #edf2f7; border-color: #cbd5e1; }
         .option-item.correct { background: #d4edda; border-color: #28a745; color: #155724; }
@@ -317,28 +294,24 @@
         }
         .file-preview { margin-top: 5px; font-size: 0.85rem; color: #64748b; }
         .btn-submit {
-            background: #2563eb; color: white; border: none; padding: 12px 25px; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; width: 100%;
+            background: #2563eb; color: white; border: none; padding: 12px 25px;
+            border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; width: 100%;
         }
         .btn-submit:hover { background: #1d4ed8; }
 
         .history-box {
-            background: #fff;
-            padding: 15px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
+            background: #fff; padding: 15px; border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); flex-grow: 1; display: flex; flex-direction: column;
         }
-        .history-list { font-size: 0.85rem; color: #475569; max-height: 120px; overflow-y: auto; margin-top: 8px; display: flex; flex-direction: column; gap: 4px; }
+        .history-list { font-size: 0.85rem; color: #475569; max-height: 130px; overflow-y: auto; margin-top: 8px; display: flex; flex-direction: column; gap: 4px; }
     </style>
 </head>
 <body>
 
 <div class="game-container">
     <div class="header">
-        <h1>🎲 汉字与交际大富翁互动课堂</h1>
-        <p>支持最多 10 位玩家 | 仿照PPT第一页经典无字网格设计 | 教师端多媒体练习随心录入</p>
+        <h1>🎲 汉字与交际大富翁课堂</h1>
+        <p>支持最多 10 位玩家 | 仿照PPT第一页经典无字网格设计 | 教师端多媒体练习录入</p>
         <button class="teacher-btn" onclick="openTeacherModal()"><i class="fas fa-cog"></i> 教师端题库录入</button>
     </div>
 
@@ -346,7 +319,6 @@
         <!-- 左侧大富翁棋盘 -->
         <div class="game-board-pane">
             <div class="map-container" id="mapContainer">
-                <!-- 中央大招牌 -->
                 <div class="board-center-banner">
                     <div class="center-red-title">大富翁</div>
                     <div class="center-character" id="centerCharacterIcon">🐶</div>
@@ -356,31 +328,31 @@
 
         <!-- 右侧控制与状态面板 -->
         <div class="game-info-pane">
-            <!-- 骰子与操作控制 -->
-            <div class="control-panel">
-                <div class="dice-box">
-                    <div class="dice-display" id="diceDisplay">?</div>
+            <!-- 3D 骰子控制台 -->
+            <div class="dice-section">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <div class="dice-stage" id="diceStage">
+                        <!-- 动态生成的 3D 骰子 -->
+                    </div>
                     <div>
                         <div style="font-size: 0.8rem; color: #64748b;">当前回合</div>
                         <div id="currentTurnName" style="font-weight: bold; font-size: 1.1rem; color: #2563eb;">玩家 1 (🐶)</div>
                     </div>
                 </div>
-                <button class="dice-btn" id="rollBtn" onclick="rollDice()"><i class="fas fa-dice"></i> 掷骰子</button>
+                <button class="roll-btn" id="rollBtn" onclick="rollDice()"><i class="fas fa-dice"></i> 掷骰子</button>
             </div>
 
             <!-- 玩家状态栏 (10人上限) -->
             <div class="players-status-box">
                 <h3><span><i class="fas fa-users"></i> 玩家状态 (上限10人)</span> <button onclick="setupPlayersCount()" style="font-size: 0.8rem; padding: 3px 8px; cursor: pointer;">设置人数</button></h3>
-                <div class="players-grid" id="playersGrid">
-                    <!-- 动态生成玩家卡片 -->
-                </div>
+                <div class="players-grid" id="playersGrid"></div>
             </div>
 
             <!-- 游戏日志 -->
             <div class="history-box">
                 <h3><i class="fas fa-history"></i> 游戏动态日志</h3>
                 <div class="history-list" id="historyList">
-                    <div>🎮 游戏已加载，欢迎来到大富翁课堂！</div>
+                    <div>🎮 游戏已加载，欢迎来到大富翁互动课堂！</div>
                 </div>
             </div>
         </div>
@@ -391,9 +363,7 @@
 <div class="modal-overlay" id="quizModal">
     <div class="modal-card">
         <div class="modal-title" id="quizTitle">课堂练习与挑战</div>
-        <div id="quizBody">
-            <!-- 动态填充题目、图片/文档、选项 -->
-        </div>
+        <div id="quizBody"></div>
         <div id="quizFeedback" style="margin-top: 15px; font-weight: bold; text-align: center;"></div>
         <button id="quizNextBtn" class="btn-submit" style="margin-top: 20px; display: none;" onclick="closeQuizModal()">进入下一回合</button>
     </div>
@@ -403,18 +373,16 @@
 <div class="modal-overlay" id="teacherModal">
     <div class="modal-card">
         <span class="modal-close" onclick="closeTeacherModal()">&times;</span>
-        <div class="modal-title"><i class="fas.fa-upload"></i> 教师端练习题库录入系统</div>
-        <p style="font-size: 0.9rem; color: #64748b; margin-bottom: 15px;">您可以为任意棋盘格子绑定定制练习。支持录入汉字、拼音、选择题选项，以及上传 **图片 (.png/.jpg)**、**PDF文档** 或 **教学资料链接**。</p>
+        <div class="modal-title"><i class="fas fa-upload"></i> 教师端练习题库录入系统</div>
+        <p style="font-size: 0.9rem; color: #64748b; margin-bottom: 15px;">为任意棋盘格子绑定定制练习。支持录入汉字、拼音、选项，并可上传 **图片 (.png/.jpg)** 或 **PDF/文档** 资料。</p>
         
         <form id="teacherForm" onsubmit="saveTeacherQuestion(event)">
             <div class="form-group">
                 <label>选择绑定的格子编号 (0 - 23):</label>
-                <select id="tCellIndex">
-                    <!-- 动态生成 0-23 选项 -->
-                </select>
+                <select id="tCellIndex"></select>
             </div>
             <div class="form-group">
-                <label>题目内容 (支持汉字、拼音或说明):</label>
+                <label>题目内容 (汉字与拼音):</label>
                 <textarea id="tQuestionText" rows="3" placeholder="例如：请说出图中的文具名称 (qǐng shuō chū tú zhōng de wénjù míngchēng)"></textarea>
             </div>
             <div class="form-group">
@@ -424,15 +392,15 @@
             </div>
             <div class="form-group">
                 <label>选项 A:</label>
-                <input type="text" id="tOptA" placeholder="例如：A. 铅笔 (qiānbǐ)">
+                <input type="text" id="tOptA" placeholder="A. 铅笔 (qiānbǐ)">
             </div>
             <div class="form-group">
                 <label>选项 B:</label>
-                <input type="text" id="tOptB" placeholder="例如：B. 尺子 (chǐzi)">
+                <input type="text" id="tOptB" placeholder="B. 尺子 (chǐzi)">
             </div>
             <div class="form-group">
                 <label>选项 C:</label>
-                <input type="text" id="tOptC" placeholder="例如：C. 橡皮 (xiàngpí)">
+                <input type="text" id="tOptC" placeholder="C. 橡皮 (xiàngpí)">
             </div>
             <div class="form-group">
                 <label>正确答案:</label>
@@ -448,28 +416,71 @@
 </div>
 
 <script>
-    // 玩家图标及颜色配置 (最多10人)
+    // 3D 骰子点位映射
+    const PIPS = {
+        1: [5], 2: [1, 9], 3: [1, 5, 9],
+        4: [1, 3, 7, 9], 5: [1, 3, 5, 7, 9], 6: [1, 3, 4, 6, 7, 9]
+    };
+    const FACES = [
+        { value: 1, cls: 'front' }, { value: 6, cls: 'back' },
+        { value: 3, cls: 'right' }, { value: 4, cls: 'left' },
+        { value: 2, cls: 'top' }, { value: 5, cls: 'bottom' }
+    ];
+    const TARGET = {
+        1: { x: 0, y: 0 }, 2: { x: -90, y: 0 }, 3: { x: 0, y: -90 },
+        4: { x: 0, y: 90 }, 5: { x: 90, y: 0 }, 6: { x: 0, y: 180 }
+    };
+
+    let currentDieObj = null;
+    let currentRotX = 0, currentRotY = 0;
+
+    function init3DDice() {
+        const stage = document.getElementById('diceStage');
+        stage.innerHTML = '';
+        const die = document.createElement('div');
+        die.className = 'die';
+
+        FACES.forEach(f => {
+            const face = document.createElement('div');
+            face.className = `face ${f.cls}`;
+            for (let i = 1; i <= 9; i++) {
+                const pip = document.createElement('span');
+                pip.className = 'pip' + (PIPS[f.value].includes(i) ? ' on' : '');
+                face.appendChild(pip);
+            }
+            die.appendChild(face);
+        });
+        stage.appendChild(die);
+        currentDieObj = die;
+        setDieValue(1, false);
+    }
+
+    function setDieValue(val, animate = true) {
+        const t = TARGET[val];
+        currentRotX = t.x + 360 * 2;
+        currentRotY = t.y + 360 * 2;
+        if (!animate) currentDieObj.style.transition = 'none';
+        currentDieObj.style.transform = `rotateX(${currentRotX}deg) rotateY(${currentRotY}deg)`;
+        if (!animate) setTimeout(() => currentDieObj.style.transition = '', 50);
+    }
+
+    // 玩家配置与状态
     const tokenIcons = ["🐶", "🐱", "🐻", "🐰", "🐼", "🐨", "🦁", "🦊", "🐯", "🐵"];
     const tokenColors = ["#e74c3c", "#9b59b6", "#3498db", "#1abc9c", "#f1c40f", "#e67e22", "#34495e", "#ff6b81", "#70a1ff", "#7bed9f"];
     
-    let playerCount = 4; // 默认4人，支持最高10人
+    let playerCount = 4;
     let players = [];
     let currentPlayerIndex = 0;
-    let customCellQuestions = {}; // 教师端录入的自定义题库 { cellIndex: { q, mediaUrl, mediaType, opts, ans } }
+    let customCellQuestions = {};
     let uploadedMediaData = null;
 
-    // 初始化玩家数据
     function initPlayers(num) {
         playerCount = Math.min(10, Math.max(1, num));
         players = [];
         for(let i=0; i<playerCount; i++) {
             players.push({
-                id: i,
-                name: `玩家 ${i+1}`,
-                icon: tokenIcons[i],
-                color: tokenColors[i],
-                position: 0,
-                gold: 1000
+                id: i, name: `玩家 ${i+1}`, icon: tokenIcons[i],
+                color: tokenColors[i], position: 0, gold: 1000
             });
         }
         currentPlayerIndex = 0;
@@ -490,36 +501,17 @@
         }
     }
 
-    // 24格四周环绕地图坐标生成 (完美匹配类似PPT四周网格样式)
-    // 棋盘总大小 840x620，四周格子宽高约 70x70
+    // 生成四周环绕 24 格地图
     function generateBoardCells() {
         const mapContainer = document.getElementById('mapContainer');
-        // 清理旧格子保留中心招牌
-        const oldCells = mapContainer.querySelectorAll('.cell');
-        oldCells.forEach(c => c.remove());
+        mapContainer.querySelectorAll('.cell').forEach(c => c.remove());
 
-        // 环绕定义 (24个格子：底部6个，左侧6个，顶部6个，右侧6个)
-        // 坐标按顺时针排列: 0是GO(左上角)
         let coords = [];
-        
-        // 顶部 (0 到 6)：从左往右
-        for(let i=0; i<=6; i++) {
-            coords.unshift({index: i, left: i * 115 + 20, top: 20, type: i===0?'go':'normal'});
-        }
-        // 右侧 (7 到 11)：从上往下
-        for(let i=1; i<=5; i++) {
-            coords.push({index: 6+i, left: 710, top: i * 85 + 20, type: i===3?'stop':'normal'});
-        }
-        // 底部 (12 到 17)：从右往左
-        for(let i=0; i<=5; i++) {
-            coords.push({index: 12+i, left: 710 - i * 115, top: 520, type: i===2?'punish':(i===4?'reward':'normal')});
-        }
-        // 左侧 (18 到 23)：从下往上
-        for(let i=1; i<=5; i++) {
-            coords.push({index: 18+i, left: 20, top: 520 - i * 85, type: i===2?'chance':'normal'});
-        }
+        for(let i=0; i<=6; i++) coords.unshift({index: i, left: i * 115 + 20, top: 20, type: i===0?'go':'normal'});
+        for(let i=1; i<=5; i++) coords.push({index: 6+i, left: 710, top: i * 85 + 20, type: i===3?'stop':'normal'});
+        for(let i=0; i<=5; i++) coords.push({index: 12+i, left: 710 - i * 115, top: 520, type: i===2?'punish':(i===4?'reward':'normal')});
+        for(let i=1; i<=5; i++) coords.push({index: 18+i, left: 20, top: 520 - i * 85, type: i===2?'chance':'normal'});
 
-        // 去重并排序
         let uniqueCoords = {};
         coords.forEach(c => uniqueCoords[c.index] = c);
         
@@ -529,16 +521,14 @@
             cellDiv.className = `cell ${c.type}`;
             cellDiv.style.left = `${c.left}px`;
             cellDiv.style.top = `${c.top}px`;
-            cellDiv.id = `cell-${i}`;
             
             let numSpan = document.createElement('span');
             numSpan.className = 'cell-num';
             numSpan.textContent = i;
             cellDiv.appendChild(numSpan);
 
-            // 纯净格子：不出现汉字标题，仅用彩色边框和图标标识属性，符合用户要求
             let iconSpan = document.createElement('span');
-            iconSpan.style.fontSize = '1.2rem';
+            iconSpan.style.fontSize = '1.1rem';
             if(c.type === 'go') iconSpan.innerHTML = '🚩';
             else if(c.type === 'stop') iconSpan.innerHTML = '⛔';
             else if(c.type === 'reward') iconSpan.innerHTML = '🎁';
@@ -547,7 +537,6 @@
             else iconSpan.innerHTML = '🎯';
             cellDiv.appendChild(iconSpan);
 
-            // 玩家棋子放置容器
             let tokenContainer = document.createElement('div');
             tokenContainer.className = 'player-tokens';
             tokenContainer.id = `tokens-cell-${i}`;
@@ -556,18 +545,15 @@
             mapContainer.appendChild(cellDiv);
         }
 
-        // 填充教师端格子下拉选项
         let select = document.getElementById('tCellIndex');
         select.innerHTML = '';
         for(let i=0; i<24; i++) {
             let opt = document.createElement('option');
-            opt.value = i;
-            opt.textContent = `第 ${i} 号格子`;
+            opt.value = i; opt.textContent = `第 ${i} 号格子`;
             select.appendChild(opt);
         }
     }
 
-    // 更新棋盘上的玩家棋子位置
     function updateBoardTokens() {
         for(let i=0; i<24; i++) {
             let container = document.getElementById(`tokens-cell-${i}`);
@@ -586,7 +572,6 @@
         });
     }
 
-    // 渲染右侧玩家状态栏
     function renderPlayersStatus() {
         let grid = document.getElementById('playersGrid');
         grid.innerHTML = '';
@@ -594,7 +579,7 @@
             let card = document.createElement('div');
             card.className = `player-card ${idx === currentPlayerIndex ? 'active' : ''}`;
             card.innerHTML = `
-                <span style="font-size: 1.4rem;">${p.icon}</span>
+                <span style="font-size: 1.3rem;">${p.icon}</span>
                 <div style="flex-grow: 1;">
                     <div style="font-weight: bold;">${p.name}</div>
                     <div style="font-size: 0.8rem; color: #64748b;">金币: ${p.gold} | 位置: ${p.position}</div>
@@ -604,30 +589,23 @@
         });
 
         let curr = players[currentPlayerIndex];
-        document.getElementById('currentTurnName.innerHTML') || (document.getElementById('currentTurnName').innerHTML = `${curr.name} (${curr.icon})`);
+        document.getElementById('currentTurnName').innerHTML = `${curr.name} (${curr.icon})`;
         document.getElementById('centerCharacterIcon').textContent = curr.icon;
     }
 
-    // 掷骰子主逻辑
+    // 掷骰子与 3D 动画触发
     function rollDice() {
         let btn = document.getElementById('rollBtn');
         btn.disabled = true;
-        let diceEl = document.getElementById('diceDisplay');
         
-        let rollAnim = setInterval(() => {
-            diceEl.textContent = Math.floor(Math.random() * 6) + 1;
-        }, 80);
+        let steps = Math.floor(Math.random() * 6) + 1;
+        setDieValue(steps, true);
 
         setTimeout(() => {
-            clearInterval(rollAnim);
-            let steps = Math.floor(Math.random() * 6) + 1;
-            diceEl.textContent = steps;
-            
             let currPlayer = players[currentPlayerIndex];
             let oldPos = currPlayer.position;
             currPlayer.position = (currPlayer.position + steps) % 24;
 
-            // 经过或到达起点奖励
             if(currPlayer.position < oldPos) {
                 currPlayer.gold += 500;
                 addLog(`🎉 ${currPlayer.name} 绕过起点一圈，奖励 500 金币！`);
@@ -637,13 +615,11 @@
             renderPlayersStatus();
             addLog(`🎲 ${currPlayer.name} 掷出 ${steps} 点，移动到第 ${currPlayer.position} 格。`);
 
-            // 触发格子事件
             setTimeout(() => triggerCellEvent(currPlayer.position), 600);
             btn.disabled = false;
-        }, 800);
+        }, 900);
     }
 
-    // 触发格子事件与测验弹窗
     function triggerCellEvent(pos) {
         let currPlayer = players[currentPlayerIndex];
         let modal = document.getElementById('quizModal');
@@ -655,11 +631,9 @@
         feedback.textContent = '';
         nextBtn.style.display = 'none';
 
-        // 检查该格子是否有教师端录入的自定义练习
         if(customCellQuestions[pos]) {
             let customQ = customCellQuestions[pos];
             title.textContent = `${currPlayer.name} - 课堂定制练习 (格子 #${pos})`;
-            
             let html = `<div class="quiz-content">${customQ.question}</div>`;
             if(customQ.mediaUrl) {
                 html += `<div class="quiz-media">`;
@@ -670,7 +644,6 @@
                 }
                 html += `</div>`;
             }
-
             html += `<div class="options-list">
                 <div class="option-item" onclick="checkCustomAnswer('A', '${customQ.ans}')">${customQ.optA}</div>
                 <div class="option-item" onclick="checkCustomAnswer('B', '${customQ.ans}')">${customQ.optB}</div>
@@ -681,29 +654,24 @@
             return;
         }
 
-        // 默认内置趣味题库或事件
         if(pos === 0) {
-            // GO起点
             currPlayer.gold += 200;
             title.textContent = "🚩 起点奖励";
             body.innerHTML = `<div class="quiz-content" style="text-align:center;">来到起点！额外奖励 200 金币！</div>`;
             modal.style.display = 'flex';
             nextBtn.style.display = 'block';
         } else if(pos === 6) {
-            // 暂停格
             title.textContent = "⛔ 休息暂停";
             body.innerHTML = `<div class="quiz-content" style="text-align:center;">遇到红灯，本回合暂停休息一次！</div>`;
             modal.style.display = 'flex';
             nextBtn.style.display = 'block';
         } else {
-            // 默认随机中文课堂互动问答
             let defaultQs = [
                 {q: "早上见到老师，最礼貌的问候语是：", opts: ["A. 您好 (nín hǎo)", "B. 再见 (zàijiàn)", "C. 谢谢 (xièxie)"], ans: "A"},
                 {q: "当别人问你“你叫什么名字？”，正确的回答是：", opts: ["A. 我很好 (wǒ hěn hǎo)", "B. 我叫…… (wǒ jiào ...)", "C. 给你 (gěi nǐ)"], ans: "B"},
                 {q: "汉字“三”对应的阿拉伯数字是：", opts: ["A. 2", "B. 3", "C. 5"], ans: "B"}
             ];
             let q = defaultQs[Math.floor(Math.random() * defaultQs.length)];
-            
             title.textContent = `${currPlayer.name} - 课堂随机挑战`;
             body.innerHTML = `
                 <div class="quiz-content">${q.q}</div>
@@ -722,9 +690,7 @@
         let nextBtn = document.getElementById('quizNextBtn');
         let curr = players[currentPlayerIndex];
 
-        let items = document.querySelectorAll('.option-item');
-        items.forEach(i => i.style.pointerEvents = 'none');
-
+        document.querySelectorAll('.option-item').forEach(i => i.style.pointerEvents = 'none');
         if(selected === correct) {
             el.classList.add('correct');
             feedback.innerHTML = `<span style="color: #2e7d32;">✅ 回答正确！奖励 200 金币！</span>`;
@@ -745,9 +711,7 @@
         let nextBtn = document.getElementById('quizNextBtn');
         let curr = players[currentPlayerIndex];
 
-        let items = document.querySelectorAll('.option-item');
-        items.forEach(i => i.style.pointerEvents = 'none');
-
+        document.querySelectorAll('.option-item').forEach(i => i.style.pointerEvents = 'none');
         if(selected === correct) {
             feedback.innerHTML = `<span style="color: #2e7d32;">✅ 练习回答正确！奖励 300 金币！</span>`;
             curr.gold += 300;
@@ -763,18 +727,12 @@
 
     function closeQuizModal() {
         document.getElementById('quizModal').style.display = 'none';
-        // 轮到下一位玩家
         currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
         renderPlayersStatus();
     }
 
-    // 教师端录入弹窗交互
-    function openTeacherModal() {
-        document.getElementById('teacherModal').style.display = 'flex';
-    }
-    function closeTeacherModal() {
-        document.getElementById('teacherModal').style.display = 'none';
-    }
+    function openTeacherModal() { document.getElementById('teacherModal').style.display = 'flex'; }
+    function closeTeacherModal() { document.getElementById('teacherModal').style.display = 'none'; }
 
     function handleFileupload(event) {
         let file = event.target.files[0];
@@ -782,10 +740,7 @@
             document.getElementById('filePreviewText').textContent = `已选择文件: ${file.name} (${Math.round(file.size/1024)} KB)`;
             let reader = new FileReader();
             reader.onload = function(e) {
-                uploadedMediaData = {
-                    url: e.target.result,
-                    type: file.type
-                };
+                uploadedMediaData = { url: e.target.result, type: file.type };
             };
             reader.readAsDataURL(file);
         }
@@ -794,22 +749,15 @@
     function saveTeacherQuestion(e) {
         e.preventDefault();
         let cellIdx = document.getElementById('tCellIndex').value;
-        let qText = document.getElementById('tQuestionText').value;
-        let optA = document.getElementById('tOptA').value;
-        let optB = document.getElementById('tOptB').value;
-        let optC = document.getElementById('tOptC').value;
-        let ans = document.getElementById('tCorrectAns').value;
-
         customCellQuestions[cellIdx] = {
-            question: qText,
-            optA: optA,
-            optB: optB,
-            optC: optC,
-            ans: ans,
+            question: document.getElementById('tQuestionText').value,
+            optA: document.getElementById('tOptA').value,
+            optB: document.getElementById('tOptB').value,
+            optC: document.getElementById('tOptC').value,
+            ans: document.getElementById('tCorrectAns').value,
             mediaUrl: uploadedMediaData ? uploadedMediaData.url : null,
             mediaType: uploadedMediaData ? uploadedMediaData.type : null
         };
-
         alert(`成功为第 ${cellIdx} 号格子绑定定制练习题！`);
         uploadedMediaData = null;
         document.getElementById('teacherForm').reset();
@@ -825,10 +773,10 @@
         list.prepend(item);
     }
 
-    // 初始化加载
     window.onload = function() {
+        init3DDice();
         generateBoardCells();
-        initPlayers(4); // 默认4人，可随时通过按钮设为最高10人
+        initPlayers(4);
     };
 </script>
 
