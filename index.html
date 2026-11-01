@@ -72,7 +72,7 @@
         /* 棋盘格子样式 */
         .cell {
             position: absolute; width: 70px; height: 70px; background: #fff;
-            border: 2px solid #333; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: bold; font-size: 0.65rem; text-align: center; padding: 2px;
+            border: 2px solid #333; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: bold; font-size: 0.62rem; text-align: center; padding: 2px;
         }
         .cell-num { position: absolute; top: 2px; left: 3px; font-size: 0.55rem; color: #888; }
         .cell.go { background: #ffebee; border-color: #c62828; color: #b71c1c; }
@@ -187,7 +187,6 @@
         <h2>🎮 加入大富翁联机课堂<br><span style="font-size:0.8rem; color:#666;">Join Multiplayer Classroom</span></h2>
         <p style="font-size: 0.9rem; color: #666; margin-bottom: 15px;">请输入你的名字加入游戏，系统将为你自动分配专属角色！<br>Enter your name to join:</p>
         <input type="text" id="playerNameInput" placeholder="例如：Fatima / 玛丽亚" maxlength="15">
-        <!-- 修正了拼写错误：确保调用的是 joinGame() 而非 joingGame() -->
         <button class="roll-btn" onclick="joinGame()">进入游戏 (Join Game)</button>
     </div>
 </div>
@@ -359,7 +358,6 @@
         });
     }
 
-    // 拼写无误的 joinGame 函数
     function joinGame() {
         let nameInput = document.getElementById('playerNameInput').value.trim();
         if(!nameInput) { alert("请输入你的名字！Please enter your name!"); return; }
@@ -368,6 +366,7 @@
         generateBoardCells();
     }
 
+    // 生成 24 个格子，并精确分配 7 个功能性格子
     function generateBoardCells() {
         const mapContainer = document.getElementById('mapContainer');
         mapContainer.querySelectorAll('.cell').forEach(c => c.remove());
@@ -378,15 +377,15 @@
         for(let i=0; i<=5; i++) coords.push({index: 12+i, left: 710 - i * 115, top: 520, type: 'normal'});
         for(let i=1; i<=5; i++) coords.push({index: 18+i, left: 20, top: 520 - i * 85, type: 'normal'});
 
-        // 7个功能性格子配置
+        // 7个功能性格子配置 (punish:后退1步, stop:暂停, reward:奖励积分, chance:再扔一次)
         let specialTypes = {
             0: 'go', 
-            4: 'reward',    /* 奖励积分 */
-            7: 'punish',    /* 后退1步 */
-            10: 'stop',     /* 暂停 */
-            14: 'reward',   /* 奖励积分 */
-            17: 'chance',   /* 再扔一次 */
-            21: 'punish'    /* 后退1步 */
+            3: 'reward',    /* 奖励积分 (Random Reward) */
+            6: 'stop',      /* 暂停 (Stop) */
+            9: 'punish',    /* 后退1步 (Back 1 step) */
+            13: 'reward',   /* 奖励积分 (Random Reward) */
+            17: 'chance',   /* 再扔一次 (Roll Again) */
+            21: 'punish'    /* 后退1步 (Back 1 step) */
         };
 
         let uniqueCoords = {};
@@ -407,16 +406,16 @@
             cellDiv.appendChild(numSpan);
 
             let labelSpan = document.createElement('span');
-            labelSpan.style.fontSize = '0.58rem';
+            labelSpan.style.fontSize = '0.55rem';
             labelSpan.style.marginTop = '4px';
             labelSpan.style.lineHeight = '1.1';
             
-            if(cellType === 'go') labelSpan.innerHTML = 'GO 🚀<br><span style="font-size:0.5rem">起点</span>';
-            else if(cellType === 'stop') labelSpan.innerHTML = 'STOP 🛑<br><span style="font-size:0.5rem">暂停</span>';
-            else if(cellType === 'reward') labelSpan.innerHTML = 'REWARD 🎁<br><span style="font-size:0.5rem">奖励积分</span>';
-            else if(cellType === 'punish') labelSpan.innerHTML = 'PUNISH ⚡<br><span style="font-size:0.5rem">后退1步 (-1)</span>';
-            else if(cellType === 'chance') labelSpan.innerHTML = 'CHANCE 🎲<br><span style="font-size:0.5rem">再扔一次</span>';
-            else labelSpan.innerHTML = `格子 ${i}<br><span style="font-size:0.5rem">Cell</span>`;
+            if(cellType === 'go') labelSpan.innerHTML = 'GO 🚀<br><span style="font-size:0.48rem">起点 Start</span>';
+            else if(cellType === 'stop') labelSpan.innerHTML = 'STOP 🛑<br><span style="font-size:0.48rem">暂停 Stop</span>';
+            else if(cellType === 'reward') labelSpan.innerHTML = 'REWARD 🎁<br><span style="font-size:0.48rem">奖励积分 Points</span>';
+            else if(cellType === 'punish') labelSpan.innerHTML = 'PUNISH ⚡<br><span style="font-size:0.48rem">后退1步 Back 1</span>';
+            else if(cellType === 'chance') labelSpan.innerHTML = 'CHANCE 🎲<br><span style="font-size:0.48rem">再扔一次 Roll</span>';
+            else labelSpan.innerHTML = `格子 ${i}<br><span style="font-size:0.48rem">Cell ${i}</span>`;
             
             cellDiv.appendChild(labelSpan);
 
