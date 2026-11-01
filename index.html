@@ -159,6 +159,23 @@
         .history-box { background: #fff; padding: 12px 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); flex-grow: 1; display: flex; flex-direction: column; }
         .history-list { font-size: 0.8rem; color: #475569; max-height: 110px; overflow-y: auto; margin-top: 6px; }
 
+        /* 选择题弹窗与选项样式 */
+        .choice-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 3000; color: #333;
+        }
+        .choice-card {
+            background: #fff; width: 90%; max-width: 550px; padding: 30px; border-radius: 16px; text-align: center;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+        }
+        .choice-option {
+            background-color: #f1f8ff; border: 2px solid #d1e7ff; border-radius: 10px; padding: 12px 15px;
+            cursor: pointer; transition: all 0.2s; font-size: 1.1rem; margin-bottom: 10px; text-align: left;
+        }
+        .choice-option:hover { background-color: #e3f2fd; transform: translateX(5px); }
+        .choice-option.correct { background-color: #d4edda; border-color: #28a745; color: #155724; font-weight: bold; }
+        .choice-option.incorrect { background-color: #f8d7da; border-color: #dc3545; color: #721c24; }
+
         /* 弹窗及教师端 */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -255,7 +272,7 @@
     </div>
 </div>
 
-<!-- 功能格纯说明弹窗 (无需学生做题) -->
+<!-- 功能格纯说明弹窗 -->
 <div class="func-alert-modal" id="funcAlertModal">
     <div class="quiz-card">
         <h2 id="funcAlertTitle" style="color: #ff4b2b; margin-bottom: 15px;"></h2>
@@ -264,12 +281,24 @@
     </div>
 </div>
 
+<!-- 随机选择题弹窗 -->
+<div class="choice-modal" id="choiceQuizModal">
+    <div class="choice-card">
+        <h3 style="color: #FF416C; margin-bottom: 10px;">📝 中文语法/词汇挑战</h3>
+        <p id="choiceQuestionText" style="font-size: 1.2rem; font-weight: bold; margin-bottom: 5px;"></p>
+        <p id="choiceQuestionPinyin" style="font-size: 1rem; color: #666; margin-bottom: 20px; font-style: italic;"></p>
+        <div id="choiceOptionsContainer" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;"></div>
+        <div id="choiceFeedback" style="font-weight: bold; margin-bottom: 15px; display: none;"></div>
+        <button id="choiceNextBtn" class="roll-btn" style="display: none; padding: 10px 30px; font-size: 1rem;" onclick="closeChoiceModal()">继续游戏 (Continue)</button>
+    </div>
+</div>
+
 <!-- 教师端录入管理弹窗 -->
 <div class="modal-overlay" id="teacherModal">
     <div class="modal-card">
         <span class="modal-close" onclick="closeTeacherModal()">&times;</span>
         <div class="modal-title"><i class="fas fa-upload"></i> 教师端题库录入系统 <span style="font-size:0.8rem; color:#666;">(Teacher Console)</span></div>
-        <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 12px;">为棋盘中的 11 个题目录入格绑定定制练习（功能格已自动排除）。</p>
+        <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 12px;">为棋盘中的题目录入格绑定类型（若选择“选择题”，学生到达时将从内置题库中随机抽选）。</p>
         
         <form id="teacherForm" onsubmit="saveTeacherQuestion(event)">
             <div class="form-group">
@@ -279,34 +308,25 @@
             <div class="form-group">
                 <label>题目类型 (Question Type):</label>
                 <select id="tQuestionType" onchange="toggleQuestionTypeFields()">
-                    <option value="choice">选择题 (Multiple Choice)</option>
-                    <option value="image_upload">图片/听力实操题 (Image & Audio Task)</option>
+                    <option value="choice">选择题 (Multiple Choice - 随机从题库抽选)</option>
+                    <option value="image_upload">图片/听力实操题 (Image & Audio Task - 手动上传)</option>
                 </select>
             </div>
-            <div class="form-group">
-                <label>题目内容 / 要求说明 (Question Content):</label>
-                <textarea id="tQuestionText" rows="2" placeholder="例如：请听音频完成听力练习，并在纸上写出答案后拍照上传"></textarea>
-            </div>
             
-            <div class="form-group">
-                <label>上传图片附件 (Optional Image):</label>
-                <input type="file" id="tMediaFile" accept="image/*,.pdf" onchange="handleFileupload(event)">
-                <div class="file-preview" id="filePreviewText" style="font-size:0.8rem; color:#666;">未选择任何图片 / No image chosen</div>
-            </div>
-
-            <div class="form-group">
-                <label>🎵 上传听力音频文件 (Optional Audio / Listening file):</label>
-                <input type="file" id="tAudioFile" accept="audio/*" onchange="handleAudioUpload(event)">
-                <div class="file-preview" id="audioPreviewText" style="font-size:0.8rem; color:#666;">未选择任何音频 / No audio chosen</div>
-            </div>
-
-            <div id="choiceFieldsContainer">
-                <div class="form-group"><label>选项 A (Option A):</label><input type="text" id="tOptA" placeholder="A. 铅笔 (qiānbǐ)"></div>
-                <div class="form-group"><label>选项 B (Option B):</label><input type="text" id="tOptB" placeholder="B. 尺子 (chǐzi)"></div>
-                <div class="form-group"><label>选项 C (Option C):</label><input type="text" id="tOptC" placeholder="C. 橡皮 (xiàngpí)"></div>
+            <div id="manualQuestionFields" style="display:none;">
                 <div class="form-group">
-                    <label>正确答案 (Correct Answer):</label>
-                    <select id="tCorrectAns"><option value="A">选项 A</option><option value="B">选项 B</option><option value="C">选项 C</option></select>
+                    <label>题目内容 / 要求说明 (Question Content):</label>
+                    <textarea id="tQuestionText" rows="2" placeholder="例如：请听音频完成听力练习..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>上传图片附件 (Optional Image):</label>
+                    <input type="file" id="tMediaFile" accept="image/*,.pdf" onchange="handleFileupload(event)">
+                    <div class="file-preview" id="filePreviewText" style="font-size:0.8rem; color:#666;">未选择任何图片 / No image chosen</div>
+                </div>
+                <div class="form-group">
+                    <label>🎵 上传听力音频文件 (Optional Audio):</label>
+                    <input type="file" id="tAudioFile" accept="audio/*" onchange="handleAudioUpload(event)">
+                    <div class="file-preview" id="audioPreviewText" style="font-size:0.8rem; color:#666;">未选择任何音频 / No audio chosen</div>
                 </div>
             </div>
 
@@ -315,7 +335,7 @@
     </div>
 </div>
 
-<!-- 学生答题弹窗 -->
+<!-- 学生答题弹窗（图片上传题模式） -->
 <div class="quiz-modal" id="studentQuizModal">
     <div class="quiz-card">
         <h2 style="color: #ff4b2b; margin-bottom: 10px;">📸 闯关实操/听力任务<br><span style="font-size:0.8rem; color:#666;">Practical & Listening Task Challenge</span></h2>
@@ -359,6 +379,24 @@
     let uploadedMediaData = null;
     let uploadedAudioData = null;
     let quizTimer = null;
+
+    // 内置选择题题库（支持随机抽选）
+    const builtInQuestionDatabase = [
+        {"Q":"他是哈迪( )？", "P":"Tā shì Hādí ( )?", "Opts":["A. 吗 (ma)","B. 不 (bù)","C. 很 (hěn)"], "Ans":"A"},
+        {"Q":"( )不是纳达。", "P":"( ) bú shì Nádá.", "Opts":["A. 吗 (ma)","B. 她 (tā)","C. 什么 (shénme)"], "Ans":"B"},
+        {"Q":"我( )笔。", "P":"Wǒ ( ) bǐ.", "Opts":["A. 吗 (ma)","B. 有 (yǒu)","C. 是 (shì)"], "Ans":"B"},
+        {"Q":"他有( )吗？", "P":"Tā yǒu ( ) ma?", "Opts":["A. 笔 (bǐ)","B. 吗 (ma)","C. 谁 (shéi)"], "Ans":"A"},
+        {"Q":"我有笔，( )你。", "P":"Wǒ yǒu bǐ, ( ) nǐ.", "Opts":["A. 给 (gěi)","B. 和 (hé)","C. 去 (qù)"], "Ans":"A"},
+        {"Q":"他们去( )。", "P":"Tāmen qù ( ).", "Opts":["A. 公园 (gōngyuán)","B. 吗 (ma)","C. 谁 (shéi)"], "Ans":"A"},
+        {"Q":"阿里( )哈迪去公园。", "P":"Ālǐ ( ) Hādí qù gōngyuán.", "Opts":["A. 去 (qù)","B. 和 (hé)","C. 在 (zài)"], "Ans":"B"},
+        {"Q":"你们去( )？", "P":"Nǐmen qù ( )?", "Opts":["A. 哪儿 (nǎr)","B. 吗 (ma)","C. 什么 (shénme)"], "Ans":"A"},
+        {"Q":"她( )林月。", "P":"Tā ( ) Lín Yuè.", "Opts":["A. 是 (shì)","B. 叫 (jiào)","C. 的 (de)"], "Ans":"B"},
+        {"Q":"他是( )老师。", "P":"Tā shì ( ) lǎoshī.", "Opts":["A. 中文 (Zhōngwén)","B. 谁 (shéi)","C. 什么 (shénme)"], "Ans":"A"},
+        {"Q":"哈迪是我( )朋友。", "P":"Hādí shì wǒ ( ) péngyou.", "Opts":["A. 和 (hé)","B. 的 (de)","C. 吗 (ma)"], "Ans":"B"},
+        {"Q":"我( )我家。", "P":"Wǒ ( ) wǒ jiā.", "Opts":["A. 爱 (ài)","B. 去 (qù)","C. 喝 (hē)"], "Ans":"A"},
+        {"Q":"( )是你的笔吗？", "P":"( ) shì nǐ de bǐ ma?", "Opts":["A. 那 (nà)","B. 这 (zhè)","C. 哪 (nǎ)"], "Ans":"B"},
+        {"Q":"这是( )？", "P":"Zhè shì ( )?", "Opts":["A. 什么 (shénme)","B. 哪儿 (nǎr)","C. 谁 (shéi)"], "Ans":"A"}
+    ];
 
     const PIPS = { 1: [5], 2: [1, 9], 3: [1, 5, 9], 4: [1, 3, 7, 9], 5: [1, 3, 5, 7, 9], 6: [1, 3, 4, 6, 7, 9] };
     const FACES = [
@@ -412,15 +450,8 @@
             coords.push({ index: 14 + i, left: 20, top: 515 - i * 115 });
         }
 
-        // 7个功能性格子配置
         let specialTypes = {
-            0: 'go',        /* cell 0: GO ➡️ */
-            2: 'reward',    /* 奖励积分 */
-            4: 'stop',      /* 暂停 */
-            7: 'punish',    /* 后退1步 */
-            10: 'reward',   /* 奖励积分 */
-            13: 'chance',   /* 再扔一次 */
-            16: 'punish'    /* 后退1步 */
+            0: 'go', 2: 'reward', 4: 'stop', 7: 'punish', 10: 'reward', 13: 'chance', 16: 'punish'
         };
 
         let uniqueCoords = {};
@@ -459,7 +490,7 @@
                 labelSpan.innerHTML = 'CHANCE 🎲<br><span style="font-size:0.45rem">再扔一次 Roll</span>';
             } else {
                 if (isBound) {
-                    labelSpan.innerHTML = `格子 ${i}<br><span style="color:#2563eb; font-weight:bold; font-size:0.5rem;">✅ 已绑定(Bound)</span>`;
+                    labelSpan.innerHTML = `格子 ${i}<br><span style="color:#2563eb; font-weight:bold; font-size:0.5rem;">✅ 已绑定(${customCellQuestions[i].type === 'choice' ? '选择题' : '实操题'})</span>`;
                 } else {
                     labelSpan.innerHTML = `题目格子 ${i}<br><span style="font-size:0.48rem">Cell ${i}</span>`;
                 }
@@ -489,9 +520,10 @@
             if (!functionalCells.includes(i)) {
                 let opt = document.createElement('option');
                 opt.value = i;
-                let hasQuestion = (customCellQuestions[i] != null);
-                if (hasQuestion) {
-                    opt.textContent = `第 ${i} 号题目录入格 (Cell ${i}) — [✅ 已绑定题目 / Bound]`;
+                let q = customCellQuestions[i];
+                if (q) {
+                    let typeStr = q.type === 'choice' ? '选择题' : '实操题';
+                    opt.textContent = `第 ${i} 号题目录入格 (Cell ${i}) — [✅ 已绑定: ${typeStr}]`;
                     opt.style.color = '#2563eb';
                     opt.style.fontWeight = 'bold';
                 } else {
@@ -513,12 +545,12 @@
 
     function requestRoll() { socket.emit('roll_dice'); }
 
-    // 教师端密码保护 (1020#)
     function openTeacherModal() {
         let pwd = prompt("请输入教师管理密码 (Enter Teacher Password):");
         if (pwd === "1020#") {
             document.getElementById('teacherModal').style.display = 'flex';
             populateTeacherCellSelect();
+            toggleQuestionTypeFields();
         } else if (pwd !== null) {
             alert("密码错误！Password incorrect!");
         }
@@ -528,8 +560,9 @@
 
     function toggleQuestionTypeFields() {
         let qType = document.getElementById('tQuestionType').value;
-        let choiceContainer = document.getElementById('choiceFieldsContainer');
-        choiceContainer.style.display = (qType === 'image_upload') ? 'none' : 'block';
+        let manualFields = document.getElementById('manualQuestionFields');
+        // 如果选的是选择题，则不需要手动填写题目和上传附件（因为会自动从题库中随机抽选）
+        manualFields.style.display = (qType === 'choice') ? 'none' : 'block';
     }
 
     function handleFileupload(event) {
@@ -559,16 +592,12 @@
 
         customCellQuestions[cellIdx] = {
             type: qType,
-            question: document.getElementById('tQuestionText').value,
+            question: qType === 'choice' ? '' : document.getElementById('tQuestionText').value,
             mediaUrl: uploadedMediaData ? uploadedMediaData.url : null,
-            audioUrl: uploadedAudioData ? uploadedAudioData.url : null,
-            optA: qType === 'choice' ? document.getElementById('tOptA').value : null,
-            optB: qType === 'choice' ? document.getElementById('tOptB').value : null,
-            optC: qType === 'choice' ? document.getElementById('tOptC').value : null,
-            ans: qType === 'choice' ? document.getElementById('tCorrectAns').value : null
+            audioUrl: uploadedAudioData ? uploadedAudioData.url : null
         };
         
-        alert(`成功为第 ${cellIdx} 号题目录入格绑定定制题目！\nSuccessfully bound customized task to cell ${cellIdx}!`);
+        alert(`成功为第 ${cellIdx} 号题目录入格绑定【${qType === 'choice' ? '选择题（自动随机抽选）' : '实操题'}】！`);
         
         uploadedMediaData = null;
         uploadedAudioData = null;
@@ -661,10 +690,9 @@
         }, 2200);
     });
 
-    // 触发题目/图片/听力任务
+    // 触发任务：根据格子绑定的类型决定是“随机抽选选择题”还是“上传实操题”
     socket.on('trigger_quiz_task', (data) => {
         let pos = data.position;
-        // 如果是 7 个功能格之一，直接弹出功能纯说明提示弹窗，无需学生做题
         if ([0, 2, 4, 7, 10, 13, 16].includes(pos)) {
             if (myPlayer && myPlayer.id === data.playerId) {
                 showFunctionAlert(pos);
@@ -672,41 +700,100 @@
             return;
         }
 
-        // 普通题目录入格：弹出做题/拍照上传窗口
         let qData = customCellQuestions[pos];
         if (myPlayer && myPlayer.id === data.playerId) {
-            document.getElementById('quizQuestionText').textContent = qData ? qData.question : `请完成第 ${pos} 号格子的实操任务并拍照上传！(Complete task & upload photo)`;
-            
-            let mediaBox = document.getElementById('quizMediaContainer');
-            mediaBox.innerHTML = qData && qData.mediaUrl ? `<img src="${qData.mediaUrl}" style="max-width:100%; max-height:160px; border-radius:6px;">` : '';
-            
-            let audioBox = document.getElementById('quizAudioContainer');
-            audioBox.innerHTML = qData && qData.audioUrl ? `
-                <div style="background:#f1f5f9; padding:10px; border-radius:8px; border:1px solid #cbd5e1;">
-                    <p style="margin:0 0 5px 0; font-size:0.9rem; font-weight:bold; color:#1e293b;">🎧 听力音频 (Listening Audio):</p>
-                    <audio controls src="${qData.audioUrl}" style="width:100%;"></audio>
-                </div>
-            ` : '';
-            
-            document.getElementById('studentQuizModal').style.display = 'flex';
-            
-            let timeLeft = 300;
-            document.getElementById('timerCountdown').textContent = timeLeft;
-            if(quizTimer) clearInterval(quizTimer);
-            quizTimer = setInterval(() => {
-                timeLeft--;
+            if (qData && qData.type === 'choice') {
+                // 核心需求：如果教师录入系统选中了“选择题”，从内置文件题库中随机抽选
+                triggerRandomChoiceQuestion();
+            } else {
+                // 实操题/听力题逻辑
+                document.getElementById('quizQuestionText').textContent = qData ? qData.question : `请完成第 ${pos} 号格子的实操任务并拍照上传！(Complete task & upload photo)`;
+                
+                let mediaBox = document.getElementById('quizMediaContainer');
+                mediaBox.innerHTML = qData && qData.mediaUrl ? `<img src="${qData.mediaUrl}" style="max-width:100%; max-height:160px; border-radius:6px;">` : '';
+                
+                let audioBox = document.getElementById('quizAudioContainer');
+                audioBox.innerHTML = qData && qData.audioUrl ? `
+                    <div style="background:#f1f5f9; padding:10px; border-radius:8px; border:1px solid #cbd5e1;">
+                        <p style="margin:0 0 5px 0; font-size:0.9rem; font-weight:bold; color:#1e293b;">🎧 听力音频 (Listening Audio):</p>
+                        <audio controls src="${qData.audioUrl}" style="width:100%;"></audio>
+                    </div>
+                ` : '';
+                
+                document.getElementById('studentQuizModal').style.display = 'flex';
+                
+                let timeLeft = 300;
                 document.getElementById('timerCountdown').textContent = timeLeft;
-                if(timeLeft <= 0) {
-                    clearInterval(quizTimer);
-                    document.getElementById('studentQuizModal').style.display = 'none';
-                    alert("⏰ 5分钟反应时间已到，未及时上传！判定不通过，原地待命。\nTime's up! Failed to upload.");
-                    socket.emit('student_submit_image', { passed: false, position: pos });
-                }
-            }, 1000);
+                if(quizTimer) clearInterval(quizTimer);
+                quizTimer = setInterval(() => {
+                    timeLeft--;
+                    document.getElementById('timerCountdown').textContent = timeLeft;
+                    if(timeLeft <= 0) {
+                        clearInterval(quizTimer);
+                        document.getElementById('studentQuizModal').style.display = 'none';
+                        alert("⏰ 5分钟反应时间已到，未及时上传！判定不通过，原地待命。\nTime's up! Failed to upload.");
+                        socket.emit('student_submit_image', { passed: false, position: pos });
+                    }
+                }, 1000);
+            }
         }
     });
 
-    // 显示功能格纯说明提示弹窗
+    // 随机抽取选择题并弹出显示
+    function triggerRandomChoiceQuestion() {
+        // 从题库中随机抽出一道
+        const randomQ = builtInQuestionDatabase[Math.floor(Math.random() * builtInQuestionDatabase.length)];
+        
+        document.getElementById('choiceQuestionText').textContent = randomQ.Q;
+        document.getElementById('choiceQuestionPinyin').textContent = randomQ.P;
+        
+        let container = document.getElementById('choiceOptionsContainer');
+        container.innerHTML = '';
+        
+        randomQ.Opts.forEach(opt => {
+            let div = document.createElement('div');
+            div.className = 'choice-option';
+            div.textContent = opt;
+            div.onclick = function() { handleChoiceAnswer(this, randomQ.Ans); };
+            container.appendChild(div);
+        });
+        
+        document.getElementById('choiceFeedback').style.display = 'none';
+        document.getElementById('choiceNextBtn').style.display = 'none';
+        document.getElementById('choiceQuizModal').style.display = 'flex';
+    }
+
+    function handleChoiceAnswer(element, correctAnswer) {
+        let feedback = document.getElementById('choiceFeedback');
+        if (feedback.style.display === 'block') return; // 已经回答过
+
+        document.querySelectorAll('.choice-option').forEach(o => o.style.pointerEvents = 'none');
+        let selectedAns = element.textContent.charAt(0);
+
+        if (selectedAns === correctAnswer) {
+            element.classList.add('correct');
+            feedback.textContent = "✅ 回答正确！Correct! (Reward +200 Gold)";
+            feedback.style.color = "#28a745";
+        } else {
+            element.classList.add('incorrect');
+            feedback.textContent = `❌ 回答错误。正确答案是: ${correctAnswer} (Incorrect)`;
+            feedback.style.color = "#dc3545";
+            
+            document.querySelectorAll('.choice-option').forEach(o => {
+                if (o.textContent.charAt(0) === correctAnswer) o.classList.add('correct');
+            });
+        }
+        
+        feedback.style.display = 'block';
+        document.getElementById('choiceNextBtn').style.display = 'inline-block';
+    }
+
+    function closeChoiceModal() {
+        document.getElementById('choiceQuizModal').style.display = 'none';
+        // 答完选择题后，通知后端结束当前回合、切换到下一个玩家
+        socket.emit('teacher_grade_decision', { passed: true });
+    }
+
     function showFunctionAlert(pos) {
         let titleEl = document.getElementById('funcAlertTitle');
         let descEl = document.getElementById('funcAlertDesc');
@@ -733,6 +820,7 @@
 
     function closeFuncAlert() {
         document.getElementById('funcAlertModal').style.display = 'none';
+        socket.emit('teacher_grade_decision', { passed: true });
     }
 
     function studentSubmitImage(event) {
