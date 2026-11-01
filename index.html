@@ -167,7 +167,7 @@
     <div class="header">
         <h1>🎲 中文互动大富翁 - 多人实时联机课堂</h1>
         <p>Real-time Multiplayer Classroom Edition</p>
-        <button class="teacher-btn" onclick="openTeacherModal()"><i class="fas.fa-cog"></i> 教师端题库录入</button>
+        <button class="teacher-btn" onclick="openTeacherModal()"><i class="fas fa-cog"></i> 教师端题库录入</button>
     </div>
 
     <!-- 中英双语轮流提示 -->
@@ -340,7 +340,6 @@
             mapContainer.appendChild(cellDiv);
         }
 
-        // 填充教师端格子下拉选项
         let select = document.getElementById('tCellIndex');
         select.innerHTML = '';
         for(let i=0; i<24; i++) {
@@ -362,8 +361,16 @@
 
     function requestRoll() { socket.emit('roll_dice'); }
 
-    // 教师端弹窗控制
-    function openTeacherModal() { document.getElementById('teacherModal').style.display = 'flex'; }
+    // 带有密码保护（1020#）的教师端入口触发函数
+    function openTeacherModal() {
+        let pwd = prompt("请输入教师管理密码 (Enter Teacher Password):");
+        if (pwd === "1020#") {
+            document.getElementById('teacherModal').style.display = 'flex';
+        } else if (pwd !== null) {
+            alert("密码错误！Password incorrect!");
+        }
+    }
+
     function closeTeacherModal() { document.getElementById('teacherModal').style.display = 'none'; }
 
     function handleFileupload(event) {
