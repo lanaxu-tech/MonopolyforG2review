@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>中文互动大富翁 - 多人实时联机课堂</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- 引入 Socket.io 客户端库实现多端实时同步 -->
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <style>
         *, *::before, *::after { box-sizing: border-box; }
@@ -28,7 +27,6 @@
         .header h1 { font-size: 2.2rem; margin-bottom: 3px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
         .header p { font-size: 1rem; opacity: 0.9; }
 
-        /* 登录遮罩层 */
         .login-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(12, 15, 22, 0.9); display: flex;
@@ -81,14 +79,12 @@
             padding: 10px 60px; transform: rotate(-5deg); box-shadow: 0 8px 20px rgba(0,0,0,0.3); border: 4px solid #fff;
         }
 
-        /* 轮流提示 (中英双语) */
         .turn-announcement {
             background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
             color: #742a2a; padding: 12px; border-radius: 10px; text-align: center;
             font-weight: bold; font-size: 1.1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
-        /* 界面中心 3D 骰子实时舞台 */
         .center-dice-modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1500;
@@ -197,8 +193,8 @@
 </div>
 
 <script>
-    // ⚠️ 请将此处替换为你实际部署的 WebSocket 后端服务地址（例如 Render 上的后端网址）
-    const SOCKET_SERVER_URL = "https://your-backend-server.onrender.com"; 
+    // 已成功配置为您在 Render 上的后端网址
+    const SOCKET_SERVER_URL = "https://monopoly-backend-pqyr.onrender.com"; 
     const socket = io(SOCKET_SERVER_URL);
 
     let myPlayer = null;
@@ -231,9 +227,8 @@
 
     function joinGame() {
         let nameInput = document.getElementById('playerNameInput').value.trim();
-        if(!nameInput) { alert("请输入你的名字！"); return; }
+        if(!nameInput) { alert("请输入你的名字！Please enter your name!"); return; }
         
-        // 发送加入房间请求给后端
         socket.emit('join_game', { name: nameInput });
         document.getElementById('loginOverlay').style.display = 'none';
         generateBoardCells();
@@ -282,18 +277,15 @@
         viewport.style.height = `${620 * scale}px`;
     }
 
-    // 玩家点击投掷，向后端发送请求
     function requestRoll() {
         socket.emit('roll_dice');
     }
 
-    // ================== 实时接收后端同步数据 ==================
     socket.on('init_player', (player) => {
         myPlayer = player;
     });
 
     socket.on('update_game_state', (state) => {
-        // 更新全员位置与状态
         for(let i=0; i<24; i++) {
             let container = document.getElementById(`tokens-cell-${i}`);
             if(container) container.innerHTML = '';
@@ -309,7 +301,6 @@
             }
         });
 
-        // 渲染玩家列表
         let grid = document.getElementById('playersGrid');
         grid.innerHTML = '';
         state.players.forEach((p, idx) => {
@@ -325,13 +316,11 @@
             grid.appendChild(card);
         });
 
-        // 更新中英双语提示
         let curr = state.players[state.currentPlayerIndex];
         let announcement = document.getElementById('turnAnnouncement');
         if(curr) {
             announcement.innerHTML = `👉 该由 <span style="color:#d32f2f;">${curr.name} (${curr.icon})</span> 进行投掷骰子！<br><span style="font-size:0.9rem; font-weight:normal;">It's ${curr.name}'s turn to roll the dice!</span>`;
             
-            // 只有轮到当前手机的主人时，投掷按钮才点亮
             let rollBtn = document.getElementById('rollBtn');
             if(myPlayer && myPlayer.id === curr.id) {
                 rollBtn.disabled = false;
@@ -341,7 +330,6 @@
         }
     });
 
-    // 实时同步全员的 3D 骰子滚动动画
     socket.on('play_dice_animation', (data) => {
         document.getElementById('diceModal').style.display = 'flex';
         let die = document.getElementById('largeDie');
