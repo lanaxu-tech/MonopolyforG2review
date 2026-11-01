@@ -69,7 +69,7 @@
             box-shadow: 0 8px 25px rgba(0,0,0,0.08); border: 4px solid #333; transform-origin: top left;
         }
 
-        /* 棋盘格子 (精确包含 7 个功能性格子样式) */
+        /* 棋盘格子样式 */
         .cell {
             position: absolute; width: 70px; height: 70px; background: #fff;
             border: 2px solid #333; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: bold; font-size: 0.65rem; text-align: center; padding: 2px;
@@ -96,7 +96,7 @@
             font-weight: bold; font-size: 1.1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
-        /* ===== 生动升级的 3D 骰子物理立体舞台 ===== */
+        /* 3D 骰子舞台 */
         .center-dice-modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1500;
@@ -153,7 +153,7 @@
         .history-box { background: #fff; padding: 12px 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); flex-grow: 1; display: flex; flex-direction: column; }
         .history-list { font-size: 0.8rem; color: #475569; max-height: 110px; overflow-y: auto; margin-top: 6px; }
 
-        /* 模态框及教师端 */
+        /* 弹窗及教师端 */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 2500;
@@ -187,6 +187,7 @@
         <h2>🎮 加入大富翁联机课堂<br><span style="font-size:0.8rem; color:#666;">Join Multiplayer Classroom</span></h2>
         <p style="font-size: 0.9rem; color: #666; margin-bottom: 15px;">请输入你的名字加入游戏，系统将为你自动分配专属角色！<br>Enter your name to join:</p>
         <input type="text" id="playerNameInput" placeholder="例如：Fatima / 玛丽亚" maxlength="15">
+        <!-- 修正了拼写错误：确保调用的是 joinGame() 而非 joingGame() -->
         <button class="roll-btn" onclick="joinGame()">进入游戏 (Join Game)</button>
     </div>
 </div>
@@ -235,7 +236,7 @@
     </div>
 </div>
 
-<!-- 界面中心生动 3D 骰子实时同步舞台 -->
+<!-- 3D 骰子舞台 -->
 <div class="center-dice-modal" id="diceModal">
     <div style="background: #fff; padding: 30px; border-radius: 20px; text-align: center; width: 300px;">
         <h3 style="color: #333; margin-bottom: 10px;">🎲 正在投掷骰子...<br><span style="font-size:0.8rem; color:#666;">Rolling Dice...</span></h3>
@@ -343,7 +344,6 @@
         4: { x: 0, y: 90 }, 5: { x: 90, y: 0 }, 6: { x: 0, y: 180 }
     };
 
-    // 初始化生动 3D 骰子六面点数
     function initLargeDice() {
         const stage = document.getElementById('largeDie');
         stage.innerHTML = '';
@@ -359,6 +359,7 @@
         });
     }
 
+    // 拼写无误的 joinGame 函数
     function joinGame() {
         let nameInput = document.getElementById('playerNameInput').value.trim();
         if(!nameInput) { alert("请输入你的名字！Please enter your name!"); return; }
@@ -367,7 +368,6 @@
         generateBoardCells();
     }
 
-    // 生成 24 个格子，并精确配置 7 个功能性格子 (punish, stop, reward, chance)
     function generateBoardCells() {
         const mapContainer = document.getElementById('mapContainer');
         mapContainer.querySelectorAll('.cell').forEach(c => c.remove());
@@ -378,15 +378,15 @@
         for(let i=0; i<=5; i++) coords.push({index: 12+i, left: 710 - i * 115, top: 520, type: 'normal'});
         for(let i=1; i<=5; i++) coords.push({index: 18+i, left: 20, top: 520 - i * 85, type: 'normal'});
 
-        // 精确指定 7 个功能性格子类型 (含 punish:后退1步, stop:暂停, reward:奖励积分, chance:再扔一次)
+        // 7个功能性格子配置
         let specialTypes = {
             0: 'go', 
-            4: 'reward',    /* 奖励积分 (Reward Points) */
-            7: 'punish',    /* 后退1步 (Return 1 step) */
-            10: 'stop',     /* 暂停 (Stop) */
-            14: 'reward',   /* 奖励积分 (Reward Points) */
-            17: 'chance',   /* 再扔一次 (Roll Again) */
-            21: 'punish'    /* 后退1步 (Return 1 step) */
+            4: 'reward',    /* 奖励积分 */
+            7: 'punish',    /* 后退1步 */
+            10: 'stop',     /* 暂停 */
+            14: 'reward',   /* 奖励积分 */
+            17: 'chance',   /* 再扔一次 */
+            21: 'punish'    /* 后退1步 */
         };
 
         let uniqueCoords = {};
@@ -545,7 +545,6 @@
         }
     });
 
-    // 生动 3D 骰子多轴翻滚物理动效逻辑
     function nextAngle(current, target, minSpins) {
         const min = current + minSpins * 360;
         const rem = ((target - min) % 360 + 360) % 360;
@@ -556,4 +555,88 @@
     let currentRotY = 0;
 
     socket.on('play_dice_animation', (data) => {
-        document.getElementById('diceModal').style.display = 'flex
+        document.getElementById('diceModal').style.display = 'flex';
+        let die = document.getElementById('largeDie');
+        let t = TARGET[data.steps];
+
+        const nx = nextAngle(currentRotX, t.x, 3);
+        const ny = nextAngle(currentRotY, t.y, 3);
+        currentRotX = nx;
+        currentRotY = ny;
+
+        const dur = 1100 + Math.random() * 200;
+        die.style.transitionDuration = dur + 'ms';
+        die.style.transform = `rotateX(${nx}deg) rotateY(${ny}deg)`;
+        document.getElementById('diceResultText').textContent = `${data.playerName} 掷出了 ${data.steps} 点！(Rolled ${data.steps})`;
+
+        setTimeout(() => {
+            die.classList.add('pop');
+            setTimeout(() => die.classList.remove('pop'), 300);
+        }, dur);
+
+        setTimeout(() => {
+            document.getElementById('diceModal').style.display = 'none';
+        }, 2200);
+    });
+
+    socket.on('trigger_image_quiz', (data) => {
+        let qData = customCellQuestions[data.position];
+        if (myPlayer && myPlayer.id === data.playerId) {
+            document.getElementById('quizQuestionText').textContent = qData ? qData.question : `请完成第 ${data.position} 号格子的实操任务并拍照上传！(Complete task & upload photo)`;
+            let mediaBox = document.getElementById('quizMediaContainer');
+            mediaBox.innerHTML = qData && qData.mediaUrl ? `<img src="${qData.mediaUrl}" style="max-width:100%; max-height:180px; border-radius:6px;">` : '';
+            
+            document.getElementById('studentQuizModal').style.display = 'flex';
+            
+            let timeLeft = 300;
+            document.getElementById('timerCountdown').textContent = timeLeft;
+            if(quizTimer) clearInterval(quizTimer);
+            quizTimer = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timerCountdown').textContent = timeLeft;
+                if(timeLeft <= 0) {
+                    clearInterval(quizTimer);
+                    document.getElementById('studentQuizModal').style.display = 'none';
+                    alert("⏰ 5分钟反应时间已到，未及时上传！判定不通过，原地待命。\nTime's up! Failed to upload.");
+                    socket.emit('student_submit_image', { passed: false, position: data.position });
+                }
+            }, 1000);
+        }
+    });
+
+    function studentSubmitImage(event) {
+        let file = event.target.files[0];
+        if(file) {
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                clearInterval(quizTimer);
+                document.getElementById('studentQuizModal').style.display = 'none';
+                socket.emit('upload_homework_image', { image: e.target.result, playerName: myPlayer.name });
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    socket.on('teacher_review_homework', (data) => {
+        document.getElementById('gradingPlayerInfo').textContent = `学生 (Student): ${data.playerName} 提交了实操作业，请打分：\nSubmitted practical work, please grade:`;
+        document.getElementById('gradingStudentImg').src = data.image;
+        document.getElementById('teacherGradingModal').style.display = 'flex';
+    });
+
+    function gradeResult(isPassed) {
+        document.getElementById('teacherGradingModal').style.display = 'none';
+        socket.emit('teacher_grade_decision', { passed: isPassed });
+    }
+
+    socket.on('log_message', (msg) => {
+        let list = document.getElementById('historyList');
+        let item = document.createElement('div');
+        item.textContent = msg;
+        list.prepend(item);
+    });
+
+    window.onload = function() { initLargeDice(); };
+    window.onresize = function() { updateMapScale(); };
+</script>
+</body>
+</html>
