@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>中文互动大富翁 - 多人实时联机课堂 (Classroom Monopoly)</title>
+    <title>中文互动大富翁 - 学生端 (Classroom Monopoly)</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <style>
@@ -26,13 +26,6 @@
         }
         .header h1 { font-size: 2.2rem; margin-bottom: 3px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
         .header p { font-size: 1rem; opacity: 0.9; }
-
-        .initial-teacher-btn {
-            background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 8px 16px;
-            font-size: 0.9rem; font-weight: bold; border-radius: 30px; cursor: pointer;
-            margin-top: 10px; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;
-        }
-        .initial-teacher-btn:hover { background: #e2e8f0; color: #1e293b; }
 
         .login-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -72,9 +65,8 @@
             border: 2px solid #333; border-radius: 8px;
             display: flex; flex-direction: column; align-items: center; justify-content: center; 
             font-weight: bold; font-size: 0.65rem; text-align: center; padding: 2px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.05); transition: transform 0.2s;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
         }
-        .cell:hover { transform: scale(1.03); z-index: 10; }
         .cell-num { position: absolute; top: 3px; left: 5px; font-size: 0.6rem; color: #666; font-weight: bold; }
         
         .cell.go { background: #ffebee; border-color: #e57373; color: #c62828; }
@@ -142,9 +134,7 @@
             background: linear-gradient(135deg, #ff416c, #ff4b2b); color: white; border: none;
             padding: 14px 40px; font-size: 1.2rem; font-weight: bold; border-radius: 50px;
             cursor: pointer; box-shadow: 0 6px 20px rgba(255, 65, 108, 0.4); width: 100%;
-            transition: transform .16s ease, box-shadow .16s ease;
         }
-        .roll-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(255, 65, 108, 0.6); }
         .roll-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
         .player-tokens { display: flex; flex-wrap: wrap; gap: 2px; justify-content: center; align-items: center; margin-top: 4px; }
@@ -157,38 +147,7 @@
         .history-box { background: #fff; padding: 12px 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); flex-grow: 1; display: flex; flex-direction: column; }
         .history-list { font-size: 0.8rem; color: #475569; max-height: 110px; overflow-y: auto; margin-top: 6px; }
 
-        .choice-modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 3000; color: #333;
-        }
-        .choice-card {
-            background: #fff; width: 90%; max-width: 550px; padding: 30px; border-radius: 16px; text-align: center;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
-        }
-        .choice-option {
-            background-color: #f1f8ff; border: 2px solid #d1e7ff; border-radius: 10px; padding: 12px 15px;
-            cursor: pointer; transition: all 0.2s; font-size: 1.1rem; margin-bottom: 10px; text-align: left;
-        }
-        .choice-option:hover { background-color: #e3f2fd; transform: translateX(5px); }
-        .choice-option.correct { background-color: #d4edda; border-color: #28a745; color: #155724; font-weight: bold; }
-        .choice-option.incorrect { background-color: #f8d7da; border-color: #dc3545; color: #721c24; }
-
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 2500;
-        }
-        .modal-card {
-            background: white; width: 90%; max-width: 600px; border-radius: 15px;
-            padding: 25px; box-shadow: 0 15px 40px rgba(0,0,0,0.3); position: relative; max-height: 90vh; overflow-y: auto; color: #333;
-        }
-        .modal-close { position: absolute; top: 15px; right: 20px; font-size: 1.5rem; cursor: pointer; color: #666; }
-        .modal-title { font-size: 1.4rem; margin-bottom: 15px; color: #1e293b; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-        .form-group { margin-bottom: 12px; }
-        .form-group label { display: block; font-weight: bold; margin-bottom: 4px; color: #475569; font-size: 0.9rem; }
-        .form-group input, .form-group select, .form-group textarea {
-            width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem;
-        }
-        .quiz-modal, .grading-modal, .func-alert-modal {
+        .choice-modal, .quiz-modal, .func-alert-modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 3000; color: #333;
         }
@@ -196,6 +155,12 @@
             background: #fff; width: 90%; max-width: 500px; padding: 30px; border-radius: 16px; text-align: center;
             box-shadow: 0 15px 40px rgba(0,0,0,0.4);
         }
+        .choice-option {
+            background-color: #f1f8ff; border: 2px solid #d1e7ff; border-radius: 10px; padding: 12px 15px;
+            cursor: pointer; transition: all 0.2s; font-size: 1.1rem; margin-bottom: 10px; text-align: left;
+        }
+        .choice-option.correct { background-color: #d4edda; border-color: #28a745; color: #155724; font-weight: bold; }
+        .choice-option.incorrect { background-color: #f8d7da; border-color: #dc3545; color: #721c24; }
     </style>
 </head>
 <body>
@@ -203,13 +168,9 @@
 <div class="login-overlay" id="loginOverlay">
     <div class="login-card">
         <h2>🎮 加入大富翁联机课堂<br><span style="font-size:0.8rem; color:#666;">Join Multiplayer Classroom</span></h2>
-        <p style="font-size: 0.9rem; color: #666; margin-bottom: 15px;">请输入你的名字加入游戏，系统将为你自动分配专属角色！<br>Enter your name to join:</p>
+        <p style="font-size: 0.9rem; color: #666; margin-bottom: 15px;">请输入你的名字加入游戏，系统将为你自动分配专属角色！</p>
         <input type="text" id="playerNameInput" placeholder="例如：Fatima / 玛丽亚" maxlength="15">
         <button class="roll-btn" onclick="joinGame()">进入游戏 (Join Game)</button>
-        
-        <button class="initial-teacher-btn" onclick="openTeacherModal()">
-            <i class="fas fa-cog"></i> 教师端题库录入 (Teacher Console)
-        </button>
     </div>
 </div>
 
@@ -249,7 +210,7 @@
             <div class="history-box">
                 <h3><i class="fas fa-history"></i> 游戏动态 (Game Log)</h3>
                 <div class="history-list" id="historyList">
-                    <div>🎮 联机通道已就绪。 / Connection ready.</div>
+                    <div>🎮 联机通道已就绪。</div>
                 </div>
             </div>
         </div>
@@ -258,7 +219,7 @@
 
 <div class="center-dice-modal" id="diceModal">
     <div style="background: #fff; padding: 30px; border-radius: 20px; text-align: center; width: 300px;">
-        <h3 style="color: #333; margin-bottom: 10px;">🎲 正在投掷骰子...<br><span style="font-size:0.8rem; color:#666;">Rolling Dice...</span></h3>
+        <h3 style="color: #333; margin-bottom: 10px;">🎲 正在投掷骰子...</h3>
         <div class="dice-stage-large">
             <div class="die-large" id="largeDie"></div>
         </div>
@@ -285,76 +246,21 @@
     </div>
 </div>
 
-<div class="modal-overlay" id="teacherModal">
-    <div class="modal-card">
-        <span class="modal-close" onclick="closeTeacherModal()">&times;</span>
-        <div class="modal-title"><i class="fas fa-upload"></i> 教师端题库录入系统 <span style="font-size:0.8rem; color:#666;">(Teacher Console)</span></div>
-        <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 12px;">为棋盘中的 11 个题目录入格绑定类型（数据会实时保存在服务器，刷新不丢失）。</p>
-        
-        <form id="teacherForm" onsubmit="saveTeacherQuestion(event)">
-            <div class="form-group">
-                <label>选择绑定的题目录入格编号 (Question Cells Only):</label>
-                <select id="tCellIndex"></select>
-            </div>
-            <div class="form-group">
-                <label>题目类型 (Question Type):</label>
-                <select id="tQuestionType" onchange="toggleQuestionTypeFields()">
-                    <option value="choice">选择题 (Multiple Choice - 从内置题库随机抽选)</option>
-                    <option value="image_upload">图片/听力实操题 (Image & Audio Task - 手动上传)</option>
-                </select>
-            </div>
-            
-            <div id="manualQuestionFields" style="display:none;">
-                <div class="form-group">
-                    <label>题目内容 / 要求说明 (Question Content):</label>
-                    <textarea id="tQuestionText" rows="2" placeholder="例如：请听音频完成听力练习..."></textarea>
-                </div>
-                <div class="form-group">
-                    <label>上传图片附件 (Optional Image):</label>
-                    <input type="file" id="tMediaFile" accept="image/*,.pdf" onchange="handleFileupload(event)">
-                    <div class="file-preview" id="filePreviewText" style="font-size:0.8rem; color:#666;">未选择任何图片 / No image chosen</div>
-                </div>
-                <div class="form-group">
-                    <label>🎵 上传听力音频文件 (Optional Audio):</label>
-                    <input type="file" id="tAudioFile" accept="audio/*" onchange="handleAudioUpload(event)">
-                    <div class="file-preview" id="audioPreviewText" style="font-size:0.8rem; color:#666;">未选择任何音频 / No audio chosen</div>
-                </div>
-            </div>
-
-            <button type="submit" class="roll-btn" style="padding: 10px; font-size: 1rem; margin-top: 10px;">保存并同步 (Save & Sync)</button>
-        </form>
-    </div>
-</div>
-
 <div class="quiz-modal" id="studentQuizModal">
     <div class="quiz-card">
-        <h2 style="color: #ff4b2b; margin-bottom: 10px;">📸 闯关实操/听力任务<br><span style="font-size:0.8rem; color:#666;">Practical & Listening Task Challenge</span></h2>
+        <h2 style="color: #ff4b2b; margin-bottom: 10px;">📸 闯关实操/听力任务</h2>
         <p id="quizQuestionText" style="font-size: 1.1rem; margin-bottom: 15px; font-weight: bold;"></p>
         
         <div id="quizMediaContainer" style="margin-bottom: 15px;"></div>
         <div id="quizAudioContainer" style="margin-bottom: 15px;"></div>
         
         <div style="background: #fff3cd; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 0.95rem; color: #856404;">
-            ⏱️ 剩余反应时间 (Time Remaining): <span id="timerCountdown" style="font-weight: bold; font-size: 1.2rem;">300</span> 秒 (sec)
+            ⏱️ 剩余反应时间: <span id="timerCountdown" style="font-weight: bold; font-size: 1.2rem;">300</span> 秒
         </div>
 
         <div class="form-group">
-            <label style="font-weight: bold; margin-bottom: 5px;">请拍照或上传你已完成的作业图片：<br><span style="font-size:0.8rem; color:#666;">Upload your completed work:</span></label>
+            <label style="font-weight: bold; margin-bottom: 5px;">请拍照或上传你已完成的作业图片：</label>
             <input type="file" id="studentUploadInput" accept="image/*" onchange="submitStudentImage(event)">
-        </div>
-    </div>
-</div>
-
-<div class="grading-modal" id="teacherGradingModal">
-    <div class="quiz-card" style="max-width: 650px;">
-        <h2 style="color: #2563eb; margin-bottom: 10px;">🧑‍🏫 教师批改学生作业<br><span style="font-size:0.8rem; color:#666;">Teacher Review</span></h2>
-        <p id="gradingPlayerInfo" style="font-size: 1rem; color: #475569; margin-bottom: 15px;"></p>
-        <div style="margin: 15px 0; border: 2px solid #e2e8f0; border-radius: 8px; padding: 10px; background: #f8fafc;">
-            <img id="gradingStudentImg" src="" alt="学生提交的图片" style="max-width: 100%; max-height: 300px; border-radius: 6px;">
-        </div>
-        <div style="display: flex; gap: 15px; justify-content: center; margin-top: 20px;">
-            <button onclick="gradeResult(false)" style="background: #ef4444; color: white; border: none; padding: 12px 30px; font-size: 1.1rem; font-weight: bold; border-radius: 8px; cursor: pointer;">❌ 不通过 (Fail / Stay)</button>
-            <button onclick="gradeResult(true)" style="background: #22c55e; color: white; border: none; padding: 12px 30px; font-size: 1.1rem; font-weight: bold; border-radius: 8px; cursor: pointer;">✅ 通过 (Pass / Move)</button>
         </div>
     </div>
 </div>
@@ -364,24 +270,8 @@
     const socket = io(SOCKET_SERVER_URL);
 
     let myPlayer = null;
-    let customCellQuestions = {}; // 云端同步的题目数据
-    let uploadedMediaData = null;
-    let uploadedAudioData = null;
+    let customCellQuestions = {};
     let quizTimer = null;
-
-    // 内置选择题题库
-    const builtInQuestionDatabase = [
-        {"Q":"他是哈迪( )？", "P":"Tā shì Hādí ( )?", "Opts":["A. 吗 (ma)","B. 不 (bù)","C. 很 (hěn)"], "Ans":"A"},
-        {"Q":"( )不是纳达。", "P":"( ) bú shì Nádá.", "Opts":["A. 吗 (ma)","B. 她 (tā)","C. 什么 (shénme)"], "Ans":"B"},
-        {"Q":"我( )笔。", "P":"Wǒ ( ) bǐ.", "Opts":["A. 吗 (ma)","B. 有 (yǒu)","C. 是 (shì)"], "Ans":"B"},
-        {"Q":"他有( )吗？", "P":"Tā yǒu ( ) ma?", "Opts":["A. 笔 (bǐ)","B. 吗 (ma)","C. 谁 (shéi)"], "Ans":"A"},
-        {"Q":"我有笔，( )你。", "P":"Wǒ yǒu bǐ, ( ) nǐ.", "Opts":["A. 给 (gěi)","B. 和 (hé)","C. 去 (qù)"], "Ans":"A"},
-        {"Q":"他们去( )。", "P":"Tāmen qù ( ).", "Opts":["A. 公园 (gōngyuán)","B. 吗 (ma)","C. 谁 (shéi)"], "Ans":"A"},
-        {"Q":"阿里( )哈迪去公园。", "P":"Ālǐ ( ) Hādí qù gōngyuán.", "Opts":["A. 去 (qù)","B. 和 (hé)","C. 在 (zài)"], "Ans":"B"},
-        {"Q":"你们去( )？", "P":"Nǐmen qù ( )?", "Opts":["A. 哪儿 (nǎr)","B. 吗 (ma)","C. 什么 (shénme)"], "Ans":"A"},
-        {"Q":"她( )林月。", "P":"Tā ( ) Lín Yuè.", "Opts":["A. 是 (shì)","B. 叫 (jiào)","C. 的 (de)"], "Ans":"B"},
-        {"Q":"他是( )老师。", "P":"Tā shì ( ) lǎoshī.", "Opts":["A. 中文 (Zhōngwén)","B. 谁 (shéi)","C. 什么 (shénme)"], "Ans":"A"}
-    ];
 
     const PIPS = { 1: [5], 2: [1, 9], 3: [1, 5, 9], 4: [1, 3, 7, 9], 5: [1, 3, 5, 7, 9], 6: [1, 3, 4, 6, 7, 9] };
     const FACES = [
@@ -394,10 +284,9 @@
         4: { x: 0, y: 90 }, 5: { x: 90, y: 0 }, 6: { x: 0, y: 180 }
     };
 
-    // 监听后端同步过来的题库数据（刷新后自动恢复）
     socket.on('sync_questions', (serverQuestions) => {
         customCellQuestions = serverQuestions || {};
-        generateBoardCells(); // 刷新棋盘上的已绑定状态
+        generateBoardCells();
     });
 
     function initLargeDice() {
@@ -417,7 +306,7 @@
 
     function joinGame() {
         let nameInput = document.getElementById('playerNameInput').value.trim();
-        if(!nameInput) { alert("请输入你的名字！Please enter your name!"); return; }
+        if(!nameInput) { alert("请输入你的名字！"); return; }
         socket.emit('join_game', { name: nameInput });
         document.getElementById('loginOverlay').style.display = 'none';
         generateBoardCells();
@@ -428,23 +317,12 @@
         mapContainer.querySelectorAll('.cell').forEach(c => c.remove());
         
         let coords = [];
-        for(let i = 0; i <= 5; i++) {
-            coords.push({ index: i, left: i * 132 + 20, top: 18 });
-        }
-        for(let i = 1; i <= 4; i++) {
-            coords.push({ index: 5 + i, left: 735, top: i * 115 + 18 });
-        }
-        for(let i = 0; i <= 4; i++) {
-            coords.push({ index: 10 + i, left: 735 - i * 132, top: 515 });
-        }
-        for(let i = 1; i <= 3; i++) {
-            coords.push({ index: 14 + i, left: 20, top: 515 - i * 115 });
-        }
+        for(let i = 0; i <= 5; i++) coords.push({ index: i, left: i * 132 + 20, top: 18 });
+        for(let i = 1; i <= 4; i++) coords.push({ index: 5 + i, left: 735, top: i * 115 + 18 });
+        for(let i = 0; i <= 4; i++) coords.push({ index: 10 + i, left: 735 - i * 132, top: 515 });
+        for(let i = 1; i <= 3; i++) coords.push({ index: 14 + i, left: 20, top: 515 - i * 115 });
 
-        let specialTypes = {
-            0: 'go', 2: 'reward', 4: 'stop', 7: 'punish', 10: 'reward', 13: 'chance', 16: 'punish'
-        };
-
+        let specialTypes = { 0: 'go', 2: 'reward', 4: 'stop', 7: 'punish', 10: 'reward', 13: 'chance', 16: 'punish' };
         let uniqueCoords = {};
         coords.forEach(c => uniqueCoords[c.index] = c);
         
@@ -452,10 +330,9 @@
             let c = uniqueCoords[i] || { index: i, left: 20, top: 18 };
             let cellType = specialTypes[i] || 'normal';
             let isBound = (customCellQuestions[i] != null);
-            let classNames = `cell ${cellType} ${isBound ? 'bound' : ''}`;
 
             let cellDiv = document.createElement('div');
-            cellDiv.className = classNames;
+            cellDiv.className = `cell ${cellType} ${isBound ? 'bound' : ''}`;
             cellDiv.style.left = `${c.left}px`;
             cellDiv.style.top = `${c.top}px`;
             
@@ -467,25 +344,13 @@
             let labelSpan = document.createElement('span');
             labelSpan.style.fontSize = '0.6rem';
             labelSpan.style.marginTop = '6px';
-            labelSpan.style.lineHeight = '1.1';
             
-            if(cellType === 'go') {
-                labelSpan.innerHTML = 'GO ➡️<br><span style="font-size:0.45rem">起点 Start</span>';
-            } else if(cellType === 'stop') {
-                labelSpan.innerHTML = 'STOP 🛑<br><span style="font-size:0.45rem">暂停 Stop</span>';
-            } else if(cellType === 'reward') {
-                labelSpan.innerHTML = 'REWARD 🎁<br><span style="font-size:0.45rem">奖励随机积分</span>';
-            } else if(cellType === 'punish') {
-                labelSpan.innerHTML = 'PUNISH ⚡<br><span style="font-size:0.45rem">后退1步 Back 1</span>';
-            } else if(cellType === 'chance') {
-                labelSpan.innerHTML = 'CHANCE 🎲<br><span style="font-size:0.45rem">再扔一次 Roll</span>';
-            } else {
-                if (isBound) {
-                    labelSpan.innerHTML = `格子 ${i}<br><span style="color:#2563eb; font-weight:bold; font-size:0.5rem;">✅ 已绑定(${customCellQuestions[i].type === 'choice' ? '选择题' : '实操题'})</span>`;
-                } else {
-                    labelSpan.innerHTML = `题目格子 ${i}<br><span style="font-size:0.48rem">Cell ${i}</span>`;
-                }
-            }
+            if(cellType === 'go') labelSpan.innerHTML = 'GO ➡️';
+            else if(cellType === 'stop') labelSpan.innerHTML = 'STOP 🛑';
+            else if(cellType === 'reward') labelSpan.innerHTML = 'REWARD 🎁';
+            else if(cellType === 'punish') labelSpan.innerHTML = 'PUNISH ⚡';
+            else if(cellType === 'chance') labelSpan.innerHTML = 'CHANCE 🎲';
+            else labelSpan.innerHTML = isBound ? `格子 ${i}<br><span style="color:#2563eb; font-size:0.5rem;">✅ 已绑定</span>` : `题目格子 ${i}`;
             
             cellDiv.appendChild(labelSpan);
 
@@ -496,33 +361,7 @@
 
             mapContainer.appendChild(cellDiv);
         }
-
-        populateTeacherCellSelect();
         updateMapScale();
-    }
-
-    function populateTeacherCellSelect() {
-        let select = document.getElementById('tCellIndex');
-        if (!select) return;
-        select.innerHTML = '';
-        
-        let functionalCells = [0, 2, 4, 7, 10, 13, 16];
-        for (let i = 0; i < 18; i++) {
-            if (!functionalCells.includes(i)) {
-                let opt = document.createElement('option');
-                opt.value = i;
-                let q = customCellQuestions[i];
-                if (q) {
-                    let typeStr = q.type === 'choice' ? '选择题' : '实操题';
-                    opt.textContent = `第 ${i} 号题目录入格 (Cell ${i}) — [✅ 已绑定: ${typeStr}]`;
-                    opt.style.color = '#2563eb';
-                    opt.style.fontWeight = 'bold';
-                } else {
-                    opt.textContent = `第 ${i} 号题目录入格 (Cell ${i}) — [未绑定 / Empty]`;
-                }
-                select.appendChild(opt);
-            }
-        }
     }
 
     function updateMapScale() {
@@ -535,71 +374,6 @@
     }
 
     function requestRoll() { socket.emit('roll_dice'); }
-
-    function openTeacherModal() {
-        let pwd = prompt("请输入教师管理密码 (Enter Teacher Password):");
-        if (pwd === "1020#") {
-            document.getElementById('teacherModal').style.display = 'flex';
-            populateTeacherCellSelect();
-            toggleQuestionTypeFields();
-        } else if (pwd !== null) {
-            alert("密码错误！Password incorrect!");
-        }
-    }
-
-    function closeTeacherModal() { document.getElementById('teacherModal').style.display = 'none'; }
-
-    function toggleQuestionTypeFields() {
-        let qType = document.getElementById('tQuestionType').value;
-        let manualFields = document.getElementById('manualQuestionFields');
-        manualFields.style.display = (qType === 'choice') ? 'none' : 'block';
-    }
-
-    function handleFileupload(event) {
-        let file = event.target.files[0];
-        if(file) {
-            document.getElementById('filePreviewText').textContent = `已选择文件: ${file.name}`;
-            let reader = new FileReader();
-            reader.onload = function(e) { uploadedMediaData = { url: e.target.result, type: file.type }; };
-            reader.readAsDataURL(file);
-        }
-    }
-
-    function handleAudioUpload(event) {
-        let file = event.target.files[0];
-        if(file) {
-            document.getElementById('audioPreviewText').textContent = `已选择音频: ${file.name}`;
-            let reader = new FileReader();
-            reader.onload = function(e) { uploadedAudioData = { url: e.target.result, type: file.type }; };
-            reader.readAsDataURL(file);
-        }
-    }
-
-    function saveTeacherQuestion(e) {
-        e.preventDefault();
-        let cellIdx = document.getElementById('tCellIndex').value;
-        let qType = document.getElementById('tQuestionType').value;
-
-        let questionData = {
-            type: qType,
-            question: qType === 'choice' ? '' : document.getElementById('tQuestionText').value,
-            mediaUrl: uploadedMediaData ? uploadedMediaData.url : null,
-            audioUrl: uploadedAudioData ? uploadedAudioData.url : null
-        };
-
-        // 💾 通过 Socket 发送到后端进行持久化保存，彻底解决刷新丢失问题
-        socket.emit('save_teacher_question', { cellIdx: cellIdx, questionData: questionData });
-        
-        alert(`成功为第 ${cellIdx} 号题目录入格绑定题目并已同步到云端！`);
-        
-        uploadedMediaData = null;
-        uploadedAudioData = null;
-        document.getElementById('teacherForm').reset();
-        document.getElementById('filePreviewText').textContent = '未选择任何图片 / No image chosen';
-        document.getElementById('audioPreviewText').textContent = '未选择任何音频 / No audio chosen';
-        
-        closeTeacherModal();
-    }
 
     socket.on('init_player', (player) => { myPlayer = player; });
 
@@ -628,7 +402,7 @@
                 <span style="font-size: 1.2rem;">${p.icon}</span>
                 <div style="flex-grow: 1;">
                     <div style="font-weight: bold;">${p.name}</div>
-                    <div style="font-size: 0.75rem; color: #64748b;">金币/积分 (Gold): ${p.gold} | 位置 (Pos): ${p.position}</div>
+                    <div style="font-size: 0.75rem; color: #64748b;">金币: ${p.gold} | 位置: ${p.position}</div>
                 </div>
             `;
             grid.appendChild(card);
@@ -637,114 +411,63 @@
         let curr = state.players[state.currentPlayerIndex];
         let announcement = document.getElementById('turnAnnouncement');
         if(curr) {
-            announcement.innerHTML = `👉 该由 <span style="color:#d32f2f;">${curr.name} (${curr.icon})</span> 进行投掷骰子！<br><span style="font-size:0.9rem; font-weight:normal;">It's ${curr.name}'s turn to roll the dice!</span>`;
-            
+            announcement.innerHTML = `👉 该由 <span style="color:#d32f2f;">${curr.name} (${curr.icon})</span> 进行投掷骰子！`;
             let rollBtn = document.getElementById('rollBtn');
-            if(myPlayer && myPlayer.id === curr.id) {
-                rollBtn.disabled = false;
-            } else {
-                rollBtn.disabled = true;
-            }
+            rollBtn.disabled = !(myPlayer && myPlayer.id === curr.id);
         }
     });
 
-    function nextAngle(current, target, minSpins) {
-        const min = current + minSpins * 360;
-        const rem = ((target - min) % 360 + 360) % 360;
-        return min + rem;
-    }
-
-    let currentRotX = 0;
-    let currentRotY = 0;
-
+    let currentRotX = 0, currentRotY = 0;
     socket.on('play_dice_animation', (data) => {
         document.getElementById('diceModal').style.display = 'flex';
         let die = document.getElementById('largeDie');
         let t = TARGET[data.steps];
-
-        const nx = nextAngle(currentRotX, t.x, 3);
-        const ny = nextAngle(currentRotY, t.y, 3);
-        currentRotX = nx;
-        currentRotY = ny;
-
-        const dur = 1100 + Math.random() * 200;
-        die.style.transitionDuration = dur + 'ms';
-        die.style.transform = `rotateX(${nx}deg) rotateY(${ny}deg)`;
-        document.getElementById('diceResultText').textContent = `${data.playerName} 掷出了 ${data.steps} 点！(Rolled ${data.steps})`;
-
-        setTimeout(() => {
-            die.classList.add('pop');
-            setTimeout(() => die.classList.remove('pop'), 300);
-        }, dur);
-
-        setTimeout(() => {
-            document.getElementById('diceModal').style.display = 'none';
-        }, 2200);
+        currentRotX += 360 * 3 + t.x;
+        currentRotY += 360 * 3 + t.y;
+        die.style.transform = `rotateX(${currentRotX}deg) rotateY(${currentRotY}deg)`;
+        document.getElementById('diceResultText').textContent = `${data.playerName} 掷出了 ${data.steps} 点！`;
+        setTimeout(() => { document.getElementById('diceModal').style.display = 'none'; }, 2200);
     });
 
+    // 接收服务端推送的题目并同步展示在公屏上
     socket.on('trigger_quiz_task', (data) => {
         let pos = data.position;
         if ([0, 2, 4, 7, 10, 13, 16].includes(pos)) {
-            if (myPlayer && myPlayer.id === data.playerId) {
-                showFunctionAlert(pos);
-            }
+            if (myPlayer && myPlayer.id === data.playerId) showFunctionAlert(pos);
             return;
         }
 
-        let qData = customCellQuestions[pos];
+        let qData = data.questionData;
         if (myPlayer && myPlayer.id === data.playerId) {
             if (qData && qData.type === 'choice') {
-                triggerRandomChoiceQuestion();
+                triggerRandomChoiceQuestion(qData);
             } else {
-                document.getElementById('quizQuestionText').textContent = qData ? qData.question : `请完成第 ${pos} 号格子的实操任务并拍照上传！(Complete task & upload photo)`;
-                
+                document.getElementById('quizQuestionText').textContent = qData ? qData.question : `请完成第 ${pos} 号格子的实操任务并拍照上传！`;
                 let mediaBox = document.getElementById('quizMediaContainer');
                 mediaBox.innerHTML = qData && qData.mediaUrl ? `<img src="${qData.mediaUrl}" style="max-width:100%; max-height:160px; border-radius:6px;">` : '';
                 
                 let audioBox = document.getElementById('quizAudioContainer');
-                audioBox.innerHTML = qData && qData.audioUrl ? `
-                    <div style="background:#f1f5f9; padding:10px; border-radius:8px; border:1px solid #cbd5e1;">
-                        <p style="margin:0 0 5px 0; font-size:0.9rem; font-weight:bold; color:#1e293b;">🎧 听力音频 (Listening Audio):</p>
-                        <audio controls src="${qData.audioUrl}" style="width:100%;"></audio>
-                    </div>
-                ` : '';
+                audioBox.innerHTML = qData && qData.audioUrl ? `<audio controls src="${qData.audioUrl}" style="width:100%;"></audio>` : '';
                 
                 document.getElementById('studentQuizModal').style.display = 'flex';
-                
-                let timeLeft = 300;
-                document.getElementById('timerCountdown').textContent = timeLeft;
-                if(quizTimer) clearInterval(quizTimer);
-                quizTimer = setInterval(() => {
-                    timeLeft--;
-                    document.getElementById('timerCountdown').textContent = timeLeft;
-                    if(timeLeft <= 0) {
-                        clearInterval(quizTimer);
-                        document.getElementById('studentQuizModal').style.display = 'none';
-                        alert("⏰ 5分钟反应时间已到，未及时上传！判定不通过，原地待命。\nTime's up! Failed to upload.");
-                        socket.emit('student_submit_image', { passed: false, position: pos });
-                    }
-                }, 1000);
             }
         }
     });
 
-    function triggerRandomChoiceQuestion() {
-        const randomQ = builtInQuestionDatabase[Math.floor(Math.random() * builtInQuestionDatabase.length)];
-        
-        document.getElementById('choiceQuestionText').textContent = randomQ.Q;
-        document.getElementById('choiceQuestionPinyin').textContent = randomQ.P;
-        
+    function triggerRandomChoiceQuestion(qData) {
+        document.getElementById('choiceQuestionText').textContent = qData.question || "中文词汇/语法测试";
+        document.getElementById('choiceQuestionPinyin').textContent = qData.pinyin || "";
         let container = document.getElementById('choiceOptionsContainer');
         container.innerHTML = '';
         
-        randomQ.Opts.forEach(opt => {
+        let opts = qData.opts || ["A. 选项A", "B. 选项B", "C. 选项C"];
+        opts.forEach(opt => {
             let div = document.createElement('div');
             div.className = 'choice-option';
             div.textContent = opt;
-            div.onclick = function() { handleChoiceAnswer(this, randomQ.Ans); };
+            div.onclick = function() { handleChoiceAnswer(this, qData.ans || "A"); };
             container.appendChild(div);
         });
-        
         document.getElementById('choiceFeedback').style.display = 'none';
         document.getElementById('choiceNextBtn').style.display = 'none';
         document.getElementById('choiceQuizModal').style.display = 'flex';
@@ -752,25 +475,15 @@
 
     function handleChoiceAnswer(element, correctAnswer) {
         let feedback = document.getElementById('choiceFeedback');
-        if (feedback.style.display === 'block') return;
-
         document.querySelectorAll('.choice-option').forEach(o => o.style.pointerEvents = 'none');
         let selectedAns = element.textContent.charAt(0);
-
         if (selectedAns === correctAnswer) {
             element.classList.add('correct');
-            feedback.textContent = "✅ 回答正确！Correct! (Reward +200 Gold)";
-            feedback.style.color = "#28a745";
+            feedback.textContent = "✅ 回答正确！";
         } else {
             element.classList.add('incorrect');
-            feedback.textContent = `❌ 回答错误。正确答案是: ${correctAnswer} (Incorrect)`;
-            feedback.style.color = "#dc3545";
-            
-            document.querySelectorAll('.choice-option').forEach(o => {
-                if (o.textContent.charAt(0) === correctAnswer) o.classList.add('correct');
-            });
+            feedback.textContent = `❌ 回答错误。正确答案是: ${correctAnswer}`;
         }
-        
         feedback.style.display = 'block';
         document.getElementById('choiceNextBtn').style.display = 'inline-block';
     }
@@ -783,24 +496,11 @@
     function showFunctionAlert(pos) {
         let titleEl = document.getElementById('funcAlertTitle');
         let descEl = document.getElementById('funcAlertDesc');
-        
-        if (pos === 0) {
-            titleEl.innerHTML = "🚀 GO (起点)";
-            descEl.innerHTML = "回到起点 / Return to start";
-        } else if (pos === 2 || pos === 10) {
-            titleEl.innerHTML = "🎁 REWARD (奖励格)";
-            descEl.innerHTML = "恭喜获得随机积分奖励！<br><span style='font-size:0.9rem; color:#64748b;'>Random reward points!</span>";
-        } else if (pos === 4) {
-            titleEl.innerHTML = "🛑 STOP (暂停格)";
-            descEl.innerHTML = "触发暂停，本回合停止前进。<br><span style='font-size:0.9rem; color:#64748b;'>Stop for one turn.</span>";
-        } else if (pos === 7 || pos === 16) {
-            titleEl.innerHTML = "⚡ PUNISH (惩罚格)";
-            descEl.innerHTML = "触发惩罚，需后退 1 步。<br><span style='font-size:0.9rem; color:#64748b;'>Back one step.</span>";
-        } else if (pos === 13) {
-            titleEl.innerHTML = "🎲 CHANCE (机会格)";
-            descEl.innerHTML = "获得好运，可以再扔一次骰子！<br><span style='font-size:0.9rem; color:#64748b;'>Roll again!</span>";
-        }
-        
+        if (pos === 0) { titleEl.innerHTML = "🚀 GO"; descEl.innerHTML = "回到起点"; }
+        else if (pos === 2 || pos === 10) { titleEl.innerHTML = "🎁 REWARD"; descEl.innerHTML = "获得随机积分奖励！"; }
+        else if (pos === 4) { titleEl.innerHTML = "🛑 STOP"; descEl.innerHTML = "触发暂停一回合。"; }
+        else if (pos === 7 || pos === 16) { titleEl.innerHTML = "⚡ PUNISH"; descEl.innerHTML = "后退 1 步。"; }
+        else if (pos === 13) { titleEl.innerHTML = "🎲 CHANCE"; descEl.innerHTML = "再扔一次骰子！"; }
         document.getElementById('funcAlertModal').style.display = 'flex';
     }
 
@@ -814,23 +514,11 @@
         if(file) {
             let reader = new FileReader();
             reader.onload = function(e) {
-                clearInterval(quizTimer);
                 document.getElementById('studentQuizModal').style.display = 'none';
                 socket.emit('upload_homework_image', { image: e.target.result, playerName: myPlayer.name });
             };
             reader.readAsDataURL(file);
         }
-    }
-
-    socket.on('teacher_review_homework', (data) => {
-        document.getElementById('gradingPlayerInfo').textContent = `学生 (Student): ${data.playerName} 提交了实操作业，请打分：\nSubmitted practical work, please grade:`;
-        document.getElementById('gradingStudentImg').src = data.image;
-        document.getElementById('teacherGradingModal').style.display = 'flex';
-    });
-
-    function gradeResult(isPassed) {
-        document.getElementById('teacherGradingModal').style.display = 'none';
-        socket.emit('teacher_grade_decision', { passed: isPassed });
     }
 
     socket.on('log_message', (msg) => {
@@ -840,10 +528,7 @@
         list.prepend(item);
     });
 
-    window.onload = function() { 
-        initLargeDice(); 
-        generateBoardCells(); 
-    };
+    window.onload = function() { initLargeDice(); generateBoardCells(); };
     window.onresize = function() { updateMapScale(); };
 </script>
 </body>
