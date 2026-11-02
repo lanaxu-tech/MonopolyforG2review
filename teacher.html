@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中文互动大富翁 - 教师专属控制台 (Teacher Dashboard)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        body {
+            background: #0f172a; color: #f8fafc; min-height: 100vh; margin: 0; padding: 20px;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+        .container { max-width: 900px; margin: 0 auto; }
+        .card { background: #1e293b; padding: 25px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); margin-bottom: 20px; }
+        h1, h2 { color: #38bdf8; margin-top: 0; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-weight: bold; margin-bottom: 5px; color: #94a3b8; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: 10px; background: #0f172a; border: 1px solid #334155; color: #fff; border-radius: 8px;
+        }
+        .btn {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; border: none;
+            padding: 12px 25px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%;
+        }
+        .btn:hover { opacity: 0.9; }
+        .login-box { max-width: 400px; margin: 100px auto; text-align: center; }
+        .grading-area { border: 2px dashed #475569; padding: 15px; border-radius: 8px; background: #0f172a; text-align: center; }
+        .grading-area img { max-width: 100%; max-height: 350px; border-radius: 6px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- 教师登录层 -->
+    <div class="card login-box" id="teacherLoginBox">
+        <h2>🔒 教师端安全登录</h2>
+        <p style="color: #94a3b8; font-size: 0.9rem;">请输入管理员密码以进入题库管理与批改后台</p>
+        <div class="form-group" style="margin-top: 20px;">
+            <input type="password" id="teacherPwdInput" placeholder="请输入密码 (1020#)">
+        </div>
+        <button class="btn" onclick="teacherLogin()">登录后台 (Login)</button>
+    </div>
+
+    <!-- 教师管理主面板 -->
+    <div id="teacherMainPanel" style="display: none;">
+        <div class="card">
+            <h1>🧑‍🏫 中文大富翁 - 教师端管理与题库录入系统</h1>
+            <p style="color: #94a3b8;">在此录入题目将实时同步至学生端大屏。学生走到对应格子时将自动触发。</p>
+        </div>
+
+        <div class="card">
+            <h2>📝 题目绑定与录入</h2>
+            <form id="teacherForm" onsubmit="saveTeacherQuestion(event)">
+                <div class="form-group">
+                    <label>选择绑定的题目录入格编号 (Question Cells Only):</label>
+                    <select id="tCellIndex"></select>
+                </div>
+                <div class="form-group">
+                    <label>题目类型 (Question Type):</label>
+                    <select id="tQuestionType" onchange="toggleQuestionTypeFields()">
+                        <option value="choice">选择题 (Multiple Choice - 包含题目、选项及答案)</option>
+                        <option value="image_upload">图片/听力实操题 (Image & Audio Task - 手动上传)</option>
+                    </select>
+                </div>
+
+                <!-- 选择题专属录入区 -->
+                <div id="choiceFieldsContainer">
+                    <div class="form-group"><label>题目内容 / 题干:</label><input type="text" id="cQuestion" placeholder="例如：他是哈迪( )？"></div>
+                    <div class="form-group"><label>拼音/提示:</label><input type="text" id="cPinyin" placeholder="例如：Tā shì Hādí ( )?"></div>
+                    <div class="form-group"><label>选项 A:</label><input type="text" id="cOptA" placeholder="A. 吗 (ma)"></div>
+                    <div class="form-group"><label>选项 B:</label><input type="text" id="cOptB" placeholder="B. 不 (bù)"></div>
+                    <div class="form-group"><label>选项 C:</label><input type="text" id="cOptC" placeholder="C. 很 (hěn)"></div>
+                    <div class="form-group">
+                        <label>正确答案:</label>
+                        <select id="cAns"><option value="A">A</option><option value="B">B</option><option value="C">C</option></select>
+                    </div>
+                </div>
+
+                <!-- 实操题专属录入区 -->
+                <div id="manualQuestionFields" style="display:none;">
+                    <div class="form-group"><label>实操要求说明:</label><textarea id="tQuestionText" rows="2" placeholder="例如：请在纸上写出本课生词并拍照上传"></textarea></div>
+                    <div class="form-group"><label>上传图片附件:</label><input type="file" id="tMediaFile" accept="image/*,.pdf" onchange="handleFileupload(event)"></div>
+                    <div class="form-group"><label>🎵 上传听力音频文件:</label><input type="file" id="tAudioFile" accept="audio/*" onchange="handleAudioUpload(event)"></div>
+                </div>
+
+                <button type="submit" class="btn">保存并同步至学生端 (Save & Sync)</button>
+            </form>
+        </div>
+
+        <!-- 作业实时接收与批改面板 -->
+        <div class="card">
+            <h2>📥 学生作业实时批改箱</h2>
+            <div class="grading-area" id="gradingArea">
+                <p id="gradingStatusText" style="color: #94a3b8;">暂无学生提交作业，当学生在手机端上传图片后将在此实时显示。</p>
+                <div id="gradingContent" style="display:none;">
+                    <p id="studentInfoDisplay" style="font-weight: bold; color: #38bdf8;"></p>
+                    <img id="studentHomeworkImg" src="" alt="学生作业图片">
+                    <div style="display: flex; gap: 15px; justify-content: center; margin-top: 15px;">
+                        <button onclick="gradeResult(false)" style="background: #ef4444; color: white; border: none; padding: 10px 20px; font-weight: bold; border-radius: 6px; cursor: pointer;">❌ 不通过 (Fail)</button>
+                        <button onclick="gradeResult(true)" style="background: #22c55e; color: white; border: none; padding: 10px 20px; font-weight: bold; border-radius: 6px; cursor: pointer;">✅ 通过 (Pass)</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const SOCKET_SERVER_URL = "https://monopoly-backend-pqyr.onrender.com";
+    const socket = io(SOCKET_SERVER_URL);
+
+    let customCellQuestions = {};
+    let uploadedMediaData = null;
+    let uploadedAudioData = null;
+
+    socket.on('sync_questions', (serverQuestions) => {
+        customCellQuestions = serverQuestions || {};
+        populateTeacherCellSelect();
+    });
+
+    function teacherLogin() {
+        let pwd = document.getElementById('teacherPwdInput').value.trim();
+        socket.emit('teacher_login', { password: pwd });
+    }
+
+    socket.on('teacher_login_success', () => {
+        document.getElementById('teacherLoginBox').style.display = 'none';
+        document.getElementById('teacherMainPanel').style.display = 'block';
+        populateTeacherCellSelect();
+    });
+
+    socket.on('teacher_login_fail', (msg) => {
+        alert(msg);
+    });
+
+    function populateTeacherCellSelect() {
+        let select = document.getElementById('tCellIndex');
+        if (!select) return;
+        select.innerHTML = '';
+        let functionalCells = [0, 2, 4, 7, 10, 13, 16];
+        for (let i = 0; i < 18; i++) {
+            if (!functionalCells.includes(i)) {
+                let opt = document.createElement('option');
+                opt.value = i;
+                let q = customCellQuestions[i];
+                opt.textContent = q ? `第 ${i} 号题目录入格 — [✅ 已绑定]` : `第 ${i} 号题目录入格 — [未绑定]`;
+                select.appendChild(opt);
+            }
+        }
+    }
+
+    function toggleQuestionTypeFields() {
+        let qType = document.getElementById('tQuestionType').value;
+        document.getElementById('choiceFieldsContainer').style.display = (qType === 'choice') ? 'block' : 'none';
+        document.getElementById('manualQuestionFields').style.display = (qType === 'image_upload') ? 'block' : 'none';
+    }
+
+    function handleFileupload(event) {
+        let file = event.target.files[0];
+        if(file) {
+            let reader = new FileReader();
+            reader.onload = function(e) { uploadedMediaData = { url: e.target.result }; };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function handleAudioUpload(event) {
+        let file = event.target.files[0];
+        if(file) {
+            let reader = new FileReader();
+            reader.onload = function(e) { uploadedAudioData = { url: e.target.result }; };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function saveTeacherQuestion(e) {
+        e.preventDefault();
+        let cellIdx = document.getElementById('tCellIndex').value;
+        let qType = document.getElementById('tQuestionType').value;
+
+        let questionData = {
+            type: qType,
+            question: qType === 'choice' ? document.getElementById('cQuestion').value : document.getElementById('tQuestionText').value,
+            pinyin: qType === 'choice' ? document.getElementById('cPinyin').value : '',
+            opts: qType === 'choice' ? [document.getElementById('cOptA').value, document.getElementById('cOptB').value, document.getElementById('cOptC').value] : [],
+            ans: qType === 'choice' ? document.getElementById('cAns').value : '',
+            mediaUrl: uploadedMediaData ? uploadedMediaData.url : null,
+            audioUrl: uploadedAudioData ? uploadedAudioData.url : null
+        };
+
+        socket.emit('save_teacher_question', { cellIdx: cellIdx, questionData: questionData });
+        alert(`成功将题目同步至学生端！`);
+        document.getElementById('teacherForm').reset();
+        uploadedMediaData = null;
+        uploadedAudioData = null;
+    }
+
+    // 接收学生提交的作业图片并在教师端实时弹显
+    socket.on('teacher_review_homework', (data) => {
+        document.getElementById('gradingStatusText').style.display = 'none';
+        document.getElementById('gradingContent').style.display = 'block';
+        document.getElementById('studentInfoDisplay').textContent = `学生: ${data.playerName} 提交了作业`;
+        document.getElementById('studentHomeworkImg').src = data.image;
+    });
+
+    function gradeResult(isPassed) {
+        socket.emit('teacher_grade_decision', { passed: isPassed });
+        document.getElementById('gradingContent').style.display = 'none';
+        document.getElementById('gradingStatusText').style.display = 'block';
+        document.getElementById('gradingStatusText').textContent = "批改完成！等待下一位学生提交作业...";
+    }
+</script>
+</body>
+</html>
